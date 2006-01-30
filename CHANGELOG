@@ -1,0 +1,28 @@
+CHANGE LOG
+
+* 2005-08-19: v0.1.5
+- Added option to show addresses with no or zero email received in the
+  reporting period
+
+* 2005-08-08: v0.1.4
+- Fixed problem where unallocated pointers would be de-allocated causing 
+  a segfault on the next run
+
+* 2005-08-04: v0.1.3
+- Fixed problem where the sub_rpt pointer would be de-allocated to early
+  causing a segfault on the next run
+- Fixed problem with sub_rpt data not be de-allocated per run possible
+  memory leak
+
+* 2005-08-03: v0.1.2
+- Fixed problem with an attempt to free a pointer that was never allocated
+- Fixed possible memory leak, allocated memory that was not been de-allocated
+
+* 2005-08-02: v0.1.1
+- Added -n -s -v options and instructions to man page
+- Resolved issue when specifying a email address, asspr no longer tries to
+  open localaddresses or localdomains
+- Removed -Wstrict-prototypes, since no there is no header file or
+  prototypes.
+- Corrected Could open file to Could not open file for localaddresses
+  and localdomains files.

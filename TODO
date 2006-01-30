@@ -1,0 +1,7 @@
+TODO
+
+- Implement ability to stack options that do not require arguments
+- Implement ability to specify amount of hours to be included in reports
+- Implement ability to specify amount of minutes to be included in reports
+  which also must be dealt with for hourly reports as well
+- Provide the ability to specify start and end dates for the report mentioned
