@@ -571,7 +571,8 @@ int main(int argc, char **argv) {
 											SEPARATOR,
 											rpts_ptr[r].sub_ptr[a].data,
 											SEPARATOR);
-							if(email_allocated==1) {
+							if(email_allocated==1 &&
+							   d+1>=dirs_length) {
 								free(rpts_ptr[r].sub_ptr[a].address);
 								rpts_ptr[r].sub_ptr[a].address = NULL;
 							}

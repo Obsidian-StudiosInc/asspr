@@ -1,5 +1,9 @@
 CHANGE LOG
 
+* 2005-08-19: v0.1.6
+- Fixed problem with freeing addresses after first directory. Causing
+  segfaults on multi-directory reports.
+
 * 2005-08-19: v0.1.5
 - Added option to show addresses with no or zero email received in the
   reporting period
