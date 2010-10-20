@@ -1,5 +1,14 @@
 CHANGE LOG
 
+* 2010-10-20: v0.2
+- Modifications for optional omit file. Where if not specified, omit
+  and total lines while not appear on reports, decreasing their length.
+- Switched to using GNU's get_logopt for argument processing, considering
+  future usage of argp instead.
+- Modified all calls to fprintf to use gettext for string translation
+- Various code refactoring, added several functions
+- Improved error handling and memory/buffer cleanup when an error occurs
+
 * 2005-08-19: v0.1.6
 - Fixed problem with freeing addresses after first directory. Causing
   segfaults on multi-directory reports.
