@@ -450,7 +450,9 @@ int main(int argc, char **argv) {
         strcat(file_name,"locals");
         if(!(file_ptr = fopen(file_name,"r"))) {
             fprintf(stderr,gettext("Could not open %s (ASSP's local domains file) for reading\n"),file_name);
-            return(1);
+            free(file_name);
+            cleanup();
+            exit(EXIT_FAILURE);
         }
         char *line = calloc(line_buff_size+1,sizeof(char));
         while(fgets(line,line_buff_size-1,file_ptr)) {
@@ -468,7 +470,7 @@ int main(int argc, char **argv) {
             rpts++;
             memset(line,'\0',line_buff_size);
         }
-        memset(file_name,'\0',strlen(file_name));
+        free(file_name);
         fclose(file_ptr);
         file_ptr = NULL;
         domain_allocated = 1;
@@ -480,7 +482,9 @@ int main(int argc, char **argv) {
         strcat(file_name,"localaddresses");
         if(!(file_ptr = fopen(file_name,"r"))) {
             fprintf(stderr,gettext("Could not open %s (ASSP's local addresses file) for reading\n"),file_name);
-            return(1);
+            free(file_name);
+            cleanup();
+            exit(EXIT_FAILURE);
         }
         char *line = calloc(line_buff_size+1,sizeof(char));
         while(fgets(line,line_buff_size-1,file_ptr)) {
@@ -501,6 +505,7 @@ int main(int argc, char **argv) {
         }
         free(line);
         line = NULL;
+        free(file_name);
         fclose(file_ptr);
         file_ptr = NULL;
         email_allocated = 1;
