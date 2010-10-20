@@ -23,18 +23,26 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <sys/dir.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#define VERSION "0.2"
-#define SEPARATOR "--------------------------------------------------------------\n"
-#define OPT_NOT_IMP "option has not been implemented.\n Please contact support@obsidian-studios.com if you are interested in this feature\n"
+#include <getopt.h>
+#include <sys/dir.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+#define VERSION "0.2"
+#define NAME "asspr"
+#define COPYRIGHT "Copyright 2010 Obsidian-Studios, Inc."
+#define LICENSE "Distributed under the terms of the GNU General Public Lincense v2"
+#define DISCLAIMER "This is free software: you are free to change and redistribute it.\n" \
+                   "There is NO WARRANTY, to the extent permitted by law."
+#define SEPARATOR "--------------------------------------------------------------\n"
+
+char *install_dir = NULL;
+char *omit_file = NULL;
 char **dirs = NULL;
 char **omit = NULL;
 unsigned short dirs_length = 0;
@@ -68,7 +76,82 @@ struct sub_report {
     char *data;
     unsigned int data_length;
 };
-void init_rpt_ptr() {
+
+void cleanup() {
+    if(dirs)
+        free(dirs);
+    dirs = NULL;
+    install_dir = NULL;
+    omit_file = NULL;
+    if(omit && omit_length>0) {
+        short i;
+        for(i = 0;i<omit_length;i++) {
+            free(omit[i]);
+            omit[i] = NULL;
+        }
+        free(omit);
+    } else if(omit)
+        free(omit);
+    omit = NULL;
+}
+
+void exitError(char *msg) {
+    fprintf(stderr,gettext("Error: %s\n"),msg);
+    cleanup();
+    _exit(EXIT_FAILURE);
+}
+
+void exitClean() {
+    cleanup();
+    _exit(EXIT_SUCCESS);
+}
+
+void exitNotImp(char *opt) {
+    fprintf(stderr,gettext("Error: %s option has not been implemented.\n "
+                           "Please contact support@obsidian-studios.com "
+                           "if you are interested in this feature\n"),opt);
+    cleanup();
+    _exit(EXIT_FAILURE);
+}
+
+void printVersion() {
+    fprintf(stdout,gettext("%s %s\n%s\n%s\n%s\n"),
+                   NAME,VERSION,COPYRIGHT,LICENSE,DISCLAIMER);
+}
+
+void printHelp() {
+    printVersion();
+    fprintf(stdout,gettext("Usage: asspr [OPTION]...\n"\
+                           "Creates a report of all emails in ASSP's various directories.\n"\
+                           "\n"\
+                           "  -a,  --assp=/path/to/assp/\n"\
+                           "                            location of ASSP\n"\
+                           "  -d,  --domain=domain.com  report on this domain only\n"\
+                           "  -e,  --email-address=email@domain.com\n"\
+                           "                            report on this email address only\n"\
+                           "  -n,  --notspam            include contents of the notspam folder in report\n"\
+                           "  -o,  --omit-file=/path/to/omit-file\n"\
+                           "                            absolute path to a file containing strings in\n"\
+                           "                            subjects of emails to be omitted\n"\
+                           "  -s,  --spam               include contents of the spam folder in report\n"\
+                           "  -v,  --viruses            include contents of the viruses folder in report\n"\
+                           "  -z,  --zero               include addresses that received zero email\n"\
+                           "  -D,  --days               number of days to include in report, default is\n"\
+                           "                            1 day, set to 0 for all.\n"\
+                           "  -E,  --end-date           end date of the report\n"\
+                           "  -H,  --hours              number of hours to include in report, default is\n"\
+                           "                            start of day till time report was run at\n"\
+                           "  -M,  --minutes            number of minutes to include in report\n"\
+                           "  -S,  --start-date         start date of the report\n"\
+                           "  -Y,  --year               year of report default is the current year, set\n"\
+                           "                            to 0 for all\n"\
+                           "       --help               display this help and exit\n"\
+                           "       --version            output version information and exit\n"\
+                           "\n"\
+                           "Report bugs to support@obsidian-studios.com\n"));
+}
+
+void initRptPtr() {
     rpts_ptr = calloc(1,sizeof(struct report));
     rpts_ptr->domain = NULL;
     rpts_ptr->emails = 0;
@@ -77,7 +160,8 @@ void init_rpt_ptr() {
     rpts_ptr->sub_count = 0;
     rpts = 0;
 }
-void init_sub_ptr(struct sub_report *sub_ptr) {
+
+void initSubPtr(struct sub_report *sub_ptr) {
     sub_ptr->address = NULL;
     sub_ptr->emails = 0;
     sub_ptr->omitted = 0;
@@ -85,15 +169,25 @@ void init_sub_ptr(struct sub_report *sub_ptr) {
     sub_ptr->data = calloc(buffer_size,sizeof(char));
     sub_ptr->data_length = buffer_size;
 }
+
+char ** addDir(char *dir) {
+    dirs_length++;
+    char **temp = realloc(dirs,sizeof(char**)*dirs_length);
+    if(!temp)
+        exitError("Could not increase directory buffer large enough to hold all directories");
+    dirs = temp;
+    dirs[dirs_length-1] = dir;
+}
 short omitEmail(char *subject) {
-    if(omit==NULL || omit_length==0)
+    if(!omit || omit_length==0)
         return(0);
     int o;
     for(o=0;o<omit_length;o++)
-        if(strstr(subject,omit[o])!=NULL)
+        if(strstr(subject,omit[o]))
             return(1);
     return(0);
 }
+
 short inDateRange(struct tm *file_tm_ptr) {
     if((yday==0 || yday<=file_tm_ptr->tm_yday) &&
        (year==0 || year<=file_tm_ptr->tm_year))
@@ -101,14 +195,15 @@ short inDateRange(struct tm *file_tm_ptr) {
     else
         return(0);
 }
+
 short createReport(char *directory) {
     DIR *dp;
-    if((dp = opendir(directory))==NULL) {
-        fprintf(stderr,"Could not open %s \n",directory);
+    if(!(dp = opendir(directory))) {
+        fprintf(stderr,gettext("Could not open %s \n"),directory);
         return(1);
     }
     struct direct *dir;
-    while((dir = readdir(dp))!=NULL) {
+    while((dir = readdir(dp))) {
         if(dir->d_ino == 0)
             continue;
         if(strncasecmp(dir->d_name,".",1)==0 ||
@@ -125,8 +220,8 @@ short createReport(char *directory) {
         struct tm *file_tm_ptr = localtime(&file_time);
         if(inDateRange(file_tm_ptr)==1) {
             FILE *fp;
-            if((fp = fopen(file_name,"r"))==NULL) {
-                fprintf(stderr,"Could open for reading %s\n",file_name);
+            if(!(fp = fopen(file_name,"r"))) {
+                fprintf(stderr,gettext("Could open for reading %s\n"),file_name);
                 continue;
             }
             int results = 0;
@@ -134,7 +229,7 @@ short createReport(char *directory) {
             char to[line_buff_size];
             char from[line_buff_size];
             char subject[line_buff_size];
-            while(fgets(line,line_buff_size-1,fp)!=NULL) {
+            while(fgets(line,line_buff_size-1,fp)) {
                 if(strncasecmp(line,"From",4)==0) {
                     strcpy(from,line);
                     results++;
@@ -153,12 +248,12 @@ short createReport(char *directory) {
                     if(omitEmail(line)==1) {
                         int r;
                         for(r=0;r<rpts;r++) {
-                            if(strstr(from,rpts_ptr[r].domain)!=NULL ||
-                               strstr(to,rpts_ptr[r].domain)!=NULL) {
+                            if(strstr(from,rpts_ptr[r].domain) ||
+                               strstr(to,rpts_ptr[r].domain)) {
                                 int a;
                                 for(a=0;a<rpts_ptr[r].sub_count;a++) {
-                                    if(strstr(from,rpts_ptr[r].sub_ptr[a].address)!=NULL ||
-                                       strstr(to,rpts_ptr[r].sub_ptr[a].address)!=NULL) {
+                                    if(strstr(from,rpts_ptr[r].sub_ptr[a].address) ||
+                                       strstr(to,rpts_ptr[r].sub_ptr[a].address)) {
                                         rpts_ptr[r].sub_ptr[a].omitted++;
                                         rpts_ptr[r].sub_ptr[a].total = rpts_ptr[r].sub_ptr[a].emails + rpts_ptr[r].sub_ptr[a].omitted;
                                         rpts_ptr[r].omitted++;
@@ -182,23 +277,22 @@ short createReport(char *directory) {
             if(results==3) {
                 int r;
                 for(r=0;r<rpts;r++) {
-                    if(strstr(from,rpts_ptr[r].domain)!=NULL ||
-                       strstr(to,rpts_ptr[r].domain)!=NULL) {
+                    if(strstr(from,rpts_ptr[r].domain) ||
+                       strstr(to,rpts_ptr[r].domain)) {
                         int a;
                         for(a=0;a<rpts_ptr[r].sub_count;a++) {
-                            if(strstr(from,rpts_ptr[r].sub_ptr[a].address)!=NULL ||
-                               strstr(to,rpts_ptr[r].sub_ptr[a].address)!=NULL) {
+                            if(strstr(from,rpts_ptr[r].sub_ptr[a].address) ||
+                               strstr(to,rpts_ptr[r].sub_ptr[a].address)) {
                                 char buffer[line_buff_size*4];
                                 sprintf(buffer,"%s\n%s%s%s\n",dir->d_name,subject,from,to);
                                 int length = rpts_ptr[r].sub_ptr[a].data_length + strlen(buffer);
                                 if(length>=rpts_ptr[r].sub_ptr[a].data_length) {
                                     rpts_ptr[r].sub_ptr[a].data_length += buffer_size+(length-rpts_ptr[r].sub_ptr[a].data_length);
                                     char *temp = realloc(rpts_ptr[r].sub_ptr[a].data,rpts_ptr[r].sub_ptr[a].data_length);
-                                    if(temp==NULL) {            // this needs to be changed to have better error handling
-                                        fprintf(stderr,"Could not increase buffer large enough to hold report data\n");
+                                    if(!temp) {            // this needs to be changed to have better error handling
                                         free(file_name);
                                         file_name = NULL;
-                                        return(1);
+                                        exitError("Could not increase buffer large enough to hold report data");
                                     }
                                     rpts_ptr[r].sub_ptr[a].data = temp;
                                 }
@@ -222,268 +316,147 @@ short createReport(char *directory) {
     dp = NULL;
     return(0);
 }
+
 int main(int argc, char **argv) {
-    char *install_dir = NULL;
-    char *omit_file = NULL;
+
+    short days = -1;
+    short years = -1;
     time_t time_now;
     time(&time_now);
     tm_ptr = localtime(&time_now);
     yday = tm_ptr->tm_yday;
     year = tm_ptr->tm_year;
+    
+    static struct option long_options[] = {
+        {"assp", required_argument, NULL, 'a'},
+        {"domain", required_argument, NULL, 'd'},
+        {"email-address", required_argument, NULL, 'e'},
+        {"help", no_argument, NULL, 0},
+        {"notspam", no_argument, NULL, 'n'},
+        {"omit-file", required_argument, NULL, 'o'},
+        {"spam", no_argument, NULL, 's'},
+        {"viruses", no_argument, NULL, 'v'},
+        {"zero", no_argument, NULL, 'z'},
+        {"days", required_argument, NULL, 'D'},
+        {"end-date", required_argument, NULL, 'E'},
+        {"hours", required_argument, NULL, 'H'},
+        {"minutes", required_argument, NULL, 'M'},
+        {"start-date", required_argument, NULL, 'S'},
+        {"years", required_argument, NULL, 'Y'},
+        {"version", no_argument, NULL, 1}
+    };
     short c = 0;
-    for(c=0;c<argc;c++) {
-        if(strcmp(argv[c],"-a")==0 || strncmp(argv[c],"--assp=",7)==0) {
-            if((strcmp(argv[c],"-a")==0 && (argc<=c+1 || strncmp(argv[c+1],"-",1)==0)) ||
-               strcmp(argv[c],"--assp=")==0) {
-                fprintf(stdout,"asspr requires an absolute directory path to the assp installation\n");
-                return(1);
-            } else {
-                if(strcmp(argv[c],"-a")==0) {
-                    c++;
-                    install_dir = argv[c];
-                } else if(strncasecmp(argv[c],"--assp=",7)==0)
-                    install_dir = argv[c]+7;
-            }
-        } else if(strcmp(argv[c],"-d")==0 || strncasecmp(argv[c],"--domain=",9)==0) {
-            if((strcmp(argv[c],"-d")==0 && (argc<=c+1 || strncasecmp(argv[c+1],"-",1)==0)) ||
-               strcmp(argv[c],"--domain=")==0) {
-                fprintf(stdout,"domain option requires a domain as an argument\n");
-                return(1);
-            } else {
-                if(strcmp(argv[c],"-d")==0) {
-                    c++;
-                    init_rpt_ptr();
-                    rpts_ptr->domain = argv[c];
-                    rpts = 1;
-                } else if(strncasecmp(argv[c],"--domain=",9)==0) {
-                    init_rpt_ptr();
-                    rpts_ptr->domain = argv[c]+9;
-                    rpts = 1;
-                }
-            }
-        } else if(strcmp(argv[c],"-e")==0 || strncasecmp(argv[c],"--email-address=",16)==0) {
-            if((strcmp(argv[c],"-e")==0 && (argc<=c+1 || strncasecmp(argv[c+1],"-",1)==0)) ||
-               strcmp(argv[c],"--email-address=")==0) {
-                fprintf(stdout,"email address option requires a email address as an argument\n");
-                return(1);
-            } else {
-                if(rpts_ptr==NULL)
-                    init_rpt_ptr();
-                if(strcmp(argv[c],"-e")==0) {
-                    c++;
-                    rpts_ptr->domain = strchr(argv[c],'@')+1;
-                    rpts = 1;
-                    rpts_ptr->sub_ptr = calloc(1,sizeof(struct sub_report));
-                    init_sub_ptr(rpts_ptr->sub_ptr);
-                    rpts_ptr->sub_ptr->address = argv[c];
-                    rpts_ptr->sub_count++;
-
-                } else if(strncasecmp(argv[c],"--email-address=",16)==0) {
-                    rpts_ptr->domain = strchr(argv[c],'@')+1;
-                    rpts = 1;
-                    rpts_ptr->sub_ptr = calloc(1,sizeof(struct sub_report));
-                    init_sub_ptr(rpts_ptr->sub_ptr);
-                    rpts_ptr->sub_ptr->address = argv[c]+16;
-                    rpts_ptr->sub_count++;
-                }
-            }
-        } else if(strcmp(argv[c],"-n")==0 || strncasecmp(argv[c],"--notspam",9)==0) {
-            dirs_length++;
-            char **temp = realloc(dirs,sizeof(char**)*dirs_length);
-            if(temp==NULL) {
-                fprintf(stderr,"Could not increase directory buffer large enough to hold all directories\n");
-                return(1);
-            }
-            dirs = temp;
-            dirs[dirs_length-1] = "notspam/";
-        } else if(strcmp(argv[c],"-o")==0 || strncmp(argv[c],"--omit-file=",12)==0) {
-            if((strcmp(argv[c],"-o")==0 && (argc<=c+1 || strncmp(argv[c+1],"-",1)==0)) ||
-               strcmp(argv[c],"--omit-file=")==0) {
-                fprintf(stdout,"absolute path to a file containing subject strings to be omitted from report\n");
-                return(1);
-            } else {
-                if(strcmp(argv[c],"-o")==0) {
-                    c++;
-                    omit_file = argv[c];
-                } else if(strncasecmp(argv[c],"--omit-file=",12)==0)
-                    omit_file = argv[c]+12;
-                if(omit_file!=NULL) {
-                    FILE *omit_file_ptr;
-                    if((omit_file_ptr = fopen(omit_file,"r"))==NULL) {
-                        fprintf(stderr,"Could open for omit file for reading\n");
-                        return(1);
-                    }
-                    char *line = calloc(line_buff_size+1,sizeof(char));
-                    while(fgets(line,line_buff_size,omit_file_ptr)!=NULL) {
-                        if(strncmp(line,"\n",1)) {
-                            char **temp = realloc(omit,sizeof(char**)*(omit_length+1));
-                            if(temp==NULL) {
-                                fprintf(stderr,"Could not increase buffer large enough to hold all local omit");
-                                return(1);
-                            }
-                            omit = temp;
-                            omit[omit_length] = calloc(strlen(line),sizeof(char));
-                            strncpy(omit[omit_length],line,strlen(line)-1);
-                            omit_length++;
-                        }
-                        memset(line,'\0',line_buff_size);
-                    }
-                    free(line);
-                    line = NULL;
-                    fclose(omit_file_ptr);
-                    omit_file_ptr = NULL;
-                }
-            }
-        } else if(strcmp(argv[c],"-s")==0 || strncasecmp(argv[c],"--spam",9)==0) {
-            dirs_length++;
-            char **temp = realloc(dirs,sizeof(char**)*dirs_length);
-            if(temp==NULL) {
-                fprintf(stderr,"Could not increase directory buffer large enough to hold all directories\n");
-                return(1);
-            }
-            dirs = temp;
-            dirs[dirs_length-1] = "spam/";
-        } else if(strcmp(argv[c],"-v")==0 || strncasecmp(argv[c],"--viruses",9)==0) {
-            dirs_length++;
-            char **temp = realloc(dirs,sizeof(char**)*dirs_length);
-            if(temp==NULL) {
-                fprintf(stderr,"Could not increase directory buffer large enough to hold all directories\n");
-                return(1);
-            }
-            dirs = temp;
-            dirs[dirs_length-1] = "viruses/";
-        } else if(strcmp(argv[c],"-z")==0 || strncasecmp(argv[c],"--zero",9)==0) {
-            include_zero = 1;
-        } else if(strcmp(argv[c],"-D")==0 || strncasecmp(argv[c],"--days=",7)==0) {
-            if((strcmp(argv[c],"-D")==0 && (argc<=c+1 || strncasecmp(argv[c+1],"-",1)==0)) ||
-               strcmp(argv[c],"--days=")==0) {
-                fprintf(stdout,"days option requires a number as an argument\n");
-                return(1);
-            } else {
-                short days = -1;
-                if(strcmp(argv[c],"-D")==0) {
-                    c++;
-                    days = atoi(argv[c]);
-                } else if(strncasecmp(argv[c],"--days=",7)==0)
-                    days = atoi(argv[c]+7);
+    short opt = 0;
+    while(opt = getopt_long(argc,argv,"a:d:e:hno:svzD:E:H:M:S:Y:",long_options,NULL), 0 <= opt) {
+        switch(opt) {
+            case 0 :
+                printHelp();
+                exitClean();
+            case 1 :
+                printVersion();
+                exitClean();
+            case 'a':
+                if(!install_dir && optarg)
+                    install_dir = optarg;
+                else
+                    exitError("Only one assp installation directory can be specified");
+                break;
+            case 'd' :
+                initRptPtr();
+                rpts_ptr->domain = optarg;
+                rpts = 1;
+                break;
+            case 'e' :
+                c++;
+                rpts_ptr->domain = strchr(optarg,'@')+1;
+                rpts = 1;
+                rpts_ptr->sub_ptr = calloc(1,sizeof(struct sub_report));
+                initSubPtr(rpts_ptr->sub_ptr);
+                rpts_ptr->sub_ptr->address = optarg;
+                rpts_ptr->sub_count++;
+                break;
+            case 'n' :
+                addDir("notspam/");
+                break;
+            case 'o' :
+                if(!omit_file && optarg) {
+                    omit_file = optarg;
+                } else
+                    exitError("Only one omit file can be specified");
+                break;
+            case 's' :
+                addDir("spam/");
+                break;
+            case 'v' :
+                addDir("viruses/");
+                break;
+            case 'z' :
+                include_zero = 1;
+                break;
+            case 'D' :
+                days = atoi(optarg);
                 if(days>1)
                     yday-=days;
                 else if(days==0)
                     yday = 0;
-            }
-        } else if(strcmp(argv[c],"-E")==0 || strncasecmp(argv[c],"--end-date=",11)==0) {
-            if((strcmp(argv[c],"-E")==0 && (argc<=c+1 || strncasecmp(argv[c+1],"-",1)==0)) ||
-               strcmp(argv[c],"--end-date=")==0) {
-                fprintf(stdout,"end date option requires a date as an argument\n");
-                return(1);
-            } else {
+                break;
+            case 'E' :
+                exitNotImp("end date");
+            case 'H' :
                 hour = tm_ptr->tm_hour;
-                fprintf(stdout,"end date %s",OPT_NOT_IMP);
-                return(0);
-            }
-        } else if(strcmp(argv[c],"-H")==0 || strncasecmp(argv[c],"--hours=",8)==0) {
-            if((strcmp(argv[c],"-H")==0 && (argc<=c+1 || strncasecmp(argv[c+1],"-",1)==0)) ||
-               strcmp(argv[c],"--hours=")==0) {
-                fprintf(stdout,"hours option requires a number as an argument\n");
-                return(1);
-            } else {
-                hour = tm_ptr->tm_hour;
-                fprintf(stdout,"hours %s",OPT_NOT_IMP);
-                return(0);
-            }
-        } else if(strcmp(argv[c],"-M")==0 || strncasecmp(argv[c],"--minutes=",10)==0) {
-            if((strcmp(argv[c],"-M")==0 && (argc<=c+1 || strncasecmp(argv[c+1],"-",1)==0)) ||
-               strcmp(argv[c],"--minutes=")==0) {
-                fprintf(stdout,"minutes option requires a number as an argument\n");
-                return(1);
-            } else {
+                exitNotImp("hours");
+            case 'M' :
                 minute = tm_ptr->tm_min;
-                fprintf(stdout,"minutes %s",OPT_NOT_IMP);
-                return(0);
-            }
-        } else if(strcmp(argv[c],"-S")==0 || strncasecmp(argv[c],"--start-date=",13)==0) {
-            if((strcmp(argv[c],"-S")==0 && (argc<=c+1 || strncasecmp(argv[c+1],"-",1)==0)) ||
-               strcmp(argv[c],"--start-date=")==0) {
-                fprintf(stdout,"start date option requires a date as an argument\n");
-                return(1);
-            } else {
-                hour = tm_ptr->tm_hour;
-                fprintf(stdout,"start date %s",OPT_NOT_IMP);
-                return(0);
-            }
-        } else if(strcmp(argv[c],"-Y")==0 || strncasecmp(argv[c],"--years=",8)==0) {
-            if((strcmp(argv[c],"-Y")==0 && (argc<=c+1 || strncasecmp(argv[c+1],"-",1)==0)) ||
-               strcmp(argv[c],"--years=")==0) {
-                fprintf(stdout,"year option requires a number as an argument\n");
-                return(1);
-            } else {
-                short years = -1;
-                if(strcmp(argv[c],"-Y")==0) {
-                    c++;
-                    years = atoi(argv[c]);
-                } else if(strncasecmp(argv[c],"--years=",8)==0)
-                    years = atoi(argv[c]+8);
+                exitNotImp("minutes");
+            case 'S' :
+                exitNotImp("start date");
+            case 'Y' :
+                years = atoi(optarg);
                 if(years>1)
                     yday-=years;
                 else if(years==0)
                     yday = 0;
+                break;
+        }
+    }
+    if(!install_dir)
+        exitError("ASSP installation directory not specified program aborting");
+    if(omit_file) {
+        FILE *omit_file_ptr;
+        if(!(omit_file_ptr = fopen(omit_file,"r")))
+            exitError("Could open for omit file for reading\n");
+        char *line = calloc(line_buff_size+1,sizeof(char));
+        while(fgets(line,line_buff_size,omit_file_ptr)) {
+            if(strncmp(line,"\n",1)) {
+                char **temp = realloc(omit,sizeof(char**)*(omit_length+1));
+                if(!temp)
+                    exitError("Could not increase buffer large enough to hold all local omit");
+                omit = temp;
+                omit[omit_length] = calloc(strlen(line),sizeof(char));
+                strncpy(omit[omit_length],line,strlen(line)-1);
+                omit_length++;
             }
-        } else if(strcmp(argv[c],"--help")==0) {
-            fprintf(stdout,"Usage: asspr [OPTION]...\n"\
-                           "Creates a report of all emails in ASSP's various directories.\n"\
-                           "\n"\
-                           "  -a,  --assp=/path/to/assp/\n"\
-                           "                            location of ASSP\n"\
-                           "  -d,  --domain=domain.com  report on this domain only\n"\
-                           "  -e,  --email-address=email@domain.com\n"\
-                           "                            report on this email address only\n"\
-                           "  -n,  --notspam            include contents of the notspam folder in report\n"\
-                           "  -o,  --omit-file=/path/to/omit-file\n"\
-                           "                            absolute path to a file containing strings in\n"\
-                           "                            subjects of emails to be omitted\n"\
-                           "  -s,  --spam               include contents of the spam folder in report\n"\
-                           "  -v,  --viruses            include contents of the viruses folder in report\n"\
-                           "  -D,  --days               number of days to include in report, default is\n"\
-                           "                            1 day, set to 0 for all.\n"\
-                           "  -E,  --end-date           end date of the report\n"\
-                           "  -H,  --hours              number of hours to include in report, default is\n"\
-                           "                            start of day till time report was run at\n"\
-                           "  -M,  --minutes            number of minutes to include in report\n"\
-                           "  -S,  --start-date         start date of the report\n"\
-                           "  -Y,  --year               year of report default is the current year, set\n"\
-                           "                            to 0 for all\n"\
-                           "  -z,  --zero               include addresses that received zero email\n"\
-                           "       --help               display this help and exit\n"\
-                           "       --version            output version information and exit\n"\
-                           "\n"\
-                           "Report bugs to support@obsidian-studios.com\n");
-            return(0);
-        } else if(strcmp(argv[c],"--version")==0) {
-            fprintf(stdout,"asspr %s\n",VERSION);
-            return(0);
-        } else if(strcmp(argv[c],"--")==0)
-            break;
+            memset(line,'\0',line_buff_size);
+        }
+        free(line);
+        line = NULL;
+        fclose(omit_file_ptr);
+        omit_file_ptr = NULL;
     }
-    if(install_dir==NULL) {
-        fprintf(stdout,"ASSP installation directory not specified program aborting\n");
-        return(1);
-    }
-    if(install_dir!=NULL && rpts_ptr==NULL) {
+    if(install_dir && !rpts_ptr) {
         FILE *file_ptr;
         char *file_name = calloc(strlen(install_dir)+15,sizeof(char));
         strcpy(file_name,install_dir);
         strcat(file_name,"locals");
-        if((file_ptr = fopen(file_name,"r"))==NULL) {
-            fprintf(stderr,"Could not open %s (ASSP's local domains file) for reading\n",file_name);
+        if(!(file_ptr = fopen(file_name,"r"))) {
+            fprintf(stderr,gettext("Could not open %s (ASSP's local domains file) for reading\n"),file_name);
             return(1);
         }
         char *line = calloc(line_buff_size+1,sizeof(char));
-        while(fgets(line,line_buff_size-1,file_ptr)!=NULL) {
+        while(fgets(line,line_buff_size-1,file_ptr)) {
             struct report *temp = realloc(rpts_ptr,sizeof(struct report)*(rpts+1));
-            if(temp==NULL) {
-                fprintf(stderr,"Could not increase buffer large enough to hold all local domains\n");
-                return(1);
-            }
+            if(!temp)
+                exitError("Could not increase buffer large enough to hold all local domains");
             rpts_ptr = temp;
             rpts_ptr[rpts].domain = calloc(strlen(line),sizeof(char));
             strncpy(rpts_ptr[rpts].domain,line,strlen(line)-1);
@@ -505,22 +478,20 @@ int main(int argc, char **argv) {
         char *file_name = calloc(strlen(install_dir)+15,sizeof(char));
         strcpy(file_name,install_dir);
         strcat(file_name,"localaddresses");
-        if((file_ptr = fopen(file_name,"r"))==NULL) {
-            fprintf(stderr,"Could not open %s (ASSP's local addresses file) for reading\n",file_name);
+        if(!(file_ptr = fopen(file_name,"r"))) {
+            fprintf(stderr,gettext("Could not open %s (ASSP's local addresses file) for reading\n"),file_name);
             return(1);
         }
         char *line = calloc(line_buff_size+1,sizeof(char));
-        while(fgets(line,line_buff_size-1,file_ptr)!=NULL) {
+        while(fgets(line,line_buff_size-1,file_ptr)) {
             short r;
             for(r=0;r<rpts;r++) {
-                if(strstr(line,rpts_ptr[r].domain)!=NULL) {
+                if(strstr(line,rpts_ptr[r].domain)) {
                     struct sub_report *temp = realloc(rpts_ptr[r].sub_ptr,sizeof(struct sub_report)*(rpts_ptr[r].sub_count+1));
-                    if(temp==NULL) {
-                        fprintf(stderr,"Could not increase buffer large enough to hold all local addresses\n");
-                        return(1);
-                    }
+                    if(!temp)
+                        exitError("Could not increase buffer large enough to hold all local addresses");
                     rpts_ptr[r].sub_ptr = temp;
-                    init_sub_ptr(&(rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count]));
+                    initSubPtr(&(rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count]));
                     rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address = calloc(strlen(line),sizeof(char));
                     strncpy(rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address,line,strlen(line)-1);
                     rpts_ptr[r].sub_count++;
@@ -534,15 +505,11 @@ int main(int argc, char **argv) {
         file_ptr = NULL;
         email_allocated = 1;
     }
-    if(rpts_ptr==NULL) {
-        fprintf(stdout,"domain or email not specified and/or could not be loaded from ASSPs file\n");
-        return(1);
-    }
-    if(dirs_length==0) {
-        fprintf(stdout,"Folders to report on not specified please use either/or/all -n -s -v options\n");
-        return(1);
-    }
-    fprintf(stdout,"asspr Anti-Spam Server Proxy Report %s %s\n",VERSION,asctime(tm_ptr));
+    if(!rpts_ptr)
+        exitError("Domain or email not specified and/or could not be loaded from ASSPs file");
+    if(dirs_length==0)
+        exitError("Folders to report on not specified please use either/or/all -n -s -v options");
+    fprintf(stdout,gettext("asspr Anti-Spam Server Proxy Report %s %s\n"),VERSION,asctime(tm_ptr));
     short d;
     for(d=0;d<dirs_length;d++) {
         char *directory = calloc(strlen(install_dir)+strlen(dirs[d])+1,sizeof(char));
@@ -552,30 +519,30 @@ int main(int argc, char **argv) {
             short r;
             for(r=0;r<rpts;r++) {
                 if(rpts_ptr[r].emails>0) {
-                    fprintf(stdout,"Domain    : %s\nDirectory : %s\n",
+                    fprintf(stdout,gettext("Domain    : %s\nDirectory : %s\n"),
                                    rpts_ptr[r].domain,
                                    directory);
                     if(rpts_ptr[r].sub_count>1)
-                        fprintf(stdout,"Addresses : %d\nEmails : %d\n",
+                        fprintf(stdout,gettext("Addresses : %d\nEmails : %d\n"),
                                        rpts_ptr[r].sub_count,
                                        rpts_ptr[r].emails);
                     if(omit_length>0)
-                        fprintf(stdout,"Omitted   : %d\nTotal     : %d\n",
+                        fprintf(stdout,gettext("Omitted   : %d\nTotal     : %d\n"),
                                        rpts_ptr[r].omitted,
                                        rpts_ptr[r].total);
                     short a;
                     for(a=0;a<rpts_ptr[r].sub_count;a++) {
                         if((rpts_ptr[r].sub_ptr[a].emails>0 || include_zero==1) &&
-                           rpts_ptr[r].sub_ptr[a].data!=NULL) {
-                            fprintf(stdout,"%sAddress   : %s\nEmails    : %d\n",
+                           rpts_ptr[r].sub_ptr[a].data) {
+                            fprintf(stdout,gettext("%sAddress   : %s\nEmails    : %d\n"),
                                            SEPARATOR,
                                            rpts_ptr[r].sub_ptr[a].address,
                                            rpts_ptr[r].sub_ptr[a].emails);
                             if(omit_length>0)
-                                fprintf(stdout,"Omitted   : %d\nTotal     : %d\n",
+                                fprintf(stdout,gettext("Omitted   : %d\nTotal     : %d\n"),
                                                rpts_ptr[r].sub_ptr[a].omitted,
                                                rpts_ptr[r].sub_ptr[a].total);
-                            fprintf(stdout,"%s\n%s%s\n\n",
+                            fprintf(stdout,gettext("%s\n%s%s\n\n"),
                                            SEPARATOR,
                                            rpts_ptr[r].sub_ptr[a].data,
                                            SEPARATOR);
@@ -604,25 +571,11 @@ int main(int argc, char **argv) {
                     }
                 }
             }
-        } else {
-            fprintf(stdout,"Report could not be created\n");
-            return(1);
-        }
+        } else
+            exitError("Report could not be created");
         free(directory);
         directory = NULL;
     }
-    free(dirs);
-    dirs = NULL;
-    install_dir = NULL;
-    omit_file = NULL;
-    if(omit!=NULL && omit_length>0) {
-        for(d = 0;d<omit_length;d++) {
-            free(omit[c]);
-            omit[c] = NULL;
-        }
-        free(omit);
-    } else if(omit!=NULL)
-        free(omit);
-    omit = NULL;
-    return (0);
+    atexit(cleanup);
+    exit(EXIT_SUCCESS);
 }
