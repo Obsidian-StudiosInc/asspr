@@ -28,18 +28,21 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include <getopt.h>
+#include <argp.h>
 #include <sys/dir.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define VERSION "0.2"
-#define NAME "asspr"
-#define COPYRIGHT "Copyright 2010 Obsidian-Studios, Inc."
-#define LICENSE "Distributed under the terms of the GNU General Public Lincense v2"
-#define DISCLAIMER "This is free software: you are free to change and redistribute it.\n" \
-                   "There is NO WARRANTY, to the extent permitted by law."
 #define SEPARATOR "--------------------------------------------------------------\n"
+
+const char *argp_program_version = "asspr, version 0.2.1";
+const char *argp_program_bug_address = "support@obsidian-studios.com";
+static char doc[] = "\nCopyright 2010 Obsidian-Studios, Inc.\n"
+                    "Distributed under the terms of the GNU General Public Lincense v2"
+                    "This is free software: you are free to change and redistribute it.\n"
+                    "There is NO WARRANTY, to the extent permitted by law.";
+/* Unused arguments description */
+static char args_doc[] = "";
 
 char *install_dir = NULL;
 char *omit_file = NULL;
@@ -112,43 +115,6 @@ void exitNotImp(char *opt) {
                            "if you are interested in this feature\n"),opt);
     cleanup();
     _exit(EXIT_FAILURE);
-}
-
-void printVersion() {
-    fprintf(stdout,gettext("%s %s\n%s\n%s\n%s\n"),
-                   NAME,VERSION,COPYRIGHT,LICENSE,DISCLAIMER);
-}
-
-void printHelp() {
-    printVersion();
-    fprintf(stdout,gettext("Usage: asspr [OPTION]...\n"\
-                           "Creates a report of all emails in ASSP's various directories.\n"\
-                           "\n"\
-                           "  -a,  --assp=/path/to/assp/\n"\
-                           "                            location of ASSP\n"\
-                           "  -d,  --domain=domain.com  report on this domain only\n"\
-                           "  -e,  --email-address=email@domain.com\n"\
-                           "                            report on this email address only\n"\
-                           "  -n,  --notspam            include contents of the notspam folder in report\n"\
-                           "  -o,  --omit-file=/path/to/omit-file\n"\
-                           "                            absolute path to a file containing strings in\n"\
-                           "                            subjects of emails to be omitted\n"\
-                           "  -s,  --spam               include contents of the spam folder in report\n"\
-                           "  -v,  --viruses            include contents of the viruses folder in report\n"\
-                           "  -z,  --zero               include addresses that received zero email\n"\
-                           "  -D,  --days               number of days to include in report, default is\n"\
-                           "                            1 day, set to 0 for all.\n"\
-                           "  -E,  --end-date           end date of the report\n"\
-                           "  -H,  --hours              number of hours to include in report, default is\n"\
-                           "                            start of day till time report was run at\n"\
-                           "  -M,  --minutes            number of minutes to include in report\n"\
-                           "  -S,  --start-date         start date of the report\n"\
-                           "  -Y,  --year               year of report default is the current year, set\n"\
-                           "                            to 0 for all\n"\
-                           "       --help               display this help and exit\n"\
-                           "       --version            output version information and exit\n"\
-                           "\n"\
-                           "Report bugs to support@obsidian-studios.com\n"));
 }
 
 void initRptPtr() {
@@ -317,108 +283,114 @@ short createReport(char *directory) {
     return(0);
 }
 
-int main(int argc, char **argv) {
+static struct argp_option options[] = {
+    {"assp", 'a', "/path/to/assp/", 0, "location of ASSP"},
+    {"domain", 'd', "domain.com", 0, "report on this domain only"},
+    {"email-address", 'e', "email@domain.com", 0, "report on this email address only"},
+    {"notspam", 'n', 0, 0, "include contents of the notspam folder in report"},
+    {"omit-file", 'o', "/path/to/omit-file", 0, "absolute path to a file containing strings in subjects of emails to be omitted"},
+    {"spam", 's', 0, 0, "include contents of the spam folder in report"},
+    {"viruses", 'v', 0, 0, "include contents of the viruses folder in report"},
+    {"zero", 'z', 0, 0, "include addresses that received zero email"},
+    {"days", 'D', "NUM", 0, "number of days to include in report, default is 1 day, set to 0 for all"},
+    {"end-date", 'E', "DATE", 0, "end date of the report"},
+    {"hours", 'H', "NUM", 0, "number of hours to include in report, default is start of day till time report was run at"},
+    {"minutes", 'M', "NUM", 0, "number of minutes to include in report"},
+    {"start-date", 'S', "DATE", 0, "start date of the report"},
+    {"years", 'Y', "YEAR", 0, "year of report default is the current year, set to 0 for all"}
+};
 
-    short days = -1;
-    short years = -1;
+struct args {
+    short c;
+    short days;
+    short years;
+};
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state) {
+    struct args *pargs = state->input;
+    switch(key) {
+        case 'a':
+            if(!install_dir && arg)
+                install_dir = arg;
+            else
+                exitError("Only one assp installation directory can be specified");
+            break;
+        case 'd' :
+            initRptPtr();
+            rpts_ptr->domain = arg;
+            rpts = 1;
+            break;
+        case 'e' :
+            pargs->c++;
+            rpts_ptr->domain = strchr(arg,'@')+1;
+            rpts = 1;
+            rpts_ptr->sub_ptr = calloc(1,sizeof(struct sub_report));
+            initSubPtr(rpts_ptr->sub_ptr);
+            rpts_ptr->sub_ptr->address = arg;
+            rpts_ptr->sub_count++;
+            break;
+        case 'n' :
+            addDir("notspam/");
+            break;
+        case 'o' :
+            if(!omit_file && arg) {
+                omit_file = arg;
+            } else
+                exitError("Only one omit file can be specified");
+            break;
+        case 's' :
+            addDir("spam/");
+            break;
+        case 'v' :
+            addDir("viruses/");
+            break;
+        case 'z' :
+            include_zero = 1;
+            break;
+        case 'D' :
+            pargs->days = atoi(arg);
+            if(pargs->days>1)
+                yday-=pargs->days;
+            else if(pargs->days==0)
+                yday = 0;
+            break;
+        case 'E' :
+            exitNotImp("end date");
+        case 'H' :
+            hour = tm_ptr->tm_hour;
+            exitNotImp("hours");
+        case 'M' :
+            minute = tm_ptr->tm_min;
+            exitNotImp("minutes");
+        case 'S' :
+            exitNotImp("start date");
+        case 'Y' :
+            pargs->years = atoi(arg);
+            if(pargs->years>1)
+                yday-=pargs->years;
+            else if(pargs->years==0)
+                yday = 0;
+            break;
+    }
+    return(0);
+}
+
+static struct argp argp = { options, parse_opt, args_doc, doc };
+
+int main(int argc, char **argv) {
+    struct args args;
+    args.c = 0;
+    args.days = -1;
+    args.years = -1;
+    
     time_t time_now;
     time(&time_now);
     tm_ptr = localtime(&time_now);
     yday = tm_ptr->tm_yday;
     year = tm_ptr->tm_year;
     
-    static struct option long_options[] = {
-        {"assp", required_argument, NULL, 'a'},
-        {"domain", required_argument, NULL, 'd'},
-        {"email-address", required_argument, NULL, 'e'},
-        {"help", no_argument, NULL, 0},
-        {"notspam", no_argument, NULL, 'n'},
-        {"omit-file", required_argument, NULL, 'o'},
-        {"spam", no_argument, NULL, 's'},
-        {"viruses", no_argument, NULL, 'v'},
-        {"zero", no_argument, NULL, 'z'},
-        {"days", required_argument, NULL, 'D'},
-        {"end-date", required_argument, NULL, 'E'},
-        {"hours", required_argument, NULL, 'H'},
-        {"minutes", required_argument, NULL, 'M'},
-        {"start-date", required_argument, NULL, 'S'},
-        {"years", required_argument, NULL, 'Y'},
-        {"version", no_argument, NULL, 1}
-    };
-    short c = 0;
-    short opt = 0;
-    while(opt = getopt_long(argc,argv,"a:d:e:hno:svzD:E:H:M:S:Y:",long_options,NULL), 0 <= opt) {
-        switch(opt) {
-            case 0 :
-                printHelp();
-                exitClean();
-            case 1 :
-                printVersion();
-                exitClean();
-            case 'a':
-                if(!install_dir && optarg)
-                    install_dir = optarg;
-                else
-                    exitError("Only one assp installation directory can be specified");
-                break;
-            case 'd' :
-                initRptPtr();
-                rpts_ptr->domain = optarg;
-                rpts = 1;
-                break;
-            case 'e' :
-                c++;
-                rpts_ptr->domain = strchr(optarg,'@')+1;
-                rpts = 1;
-                rpts_ptr->sub_ptr = calloc(1,sizeof(struct sub_report));
-                initSubPtr(rpts_ptr->sub_ptr);
-                rpts_ptr->sub_ptr->address = optarg;
-                rpts_ptr->sub_count++;
-                break;
-            case 'n' :
-                addDir("notspam/");
-                break;
-            case 'o' :
-                if(!omit_file && optarg) {
-                    omit_file = optarg;
-                } else
-                    exitError("Only one omit file can be specified");
-                break;
-            case 's' :
-                addDir("spam/");
-                break;
-            case 'v' :
-                addDir("viruses/");
-                break;
-            case 'z' :
-                include_zero = 1;
-                break;
-            case 'D' :
-                days = atoi(optarg);
-                if(days>1)
-                    yday-=days;
-                else if(days==0)
-                    yday = 0;
-                break;
-            case 'E' :
-                exitNotImp("end date");
-            case 'H' :
-                hour = tm_ptr->tm_hour;
-                exitNotImp("hours");
-            case 'M' :
-                minute = tm_ptr->tm_min;
-                exitNotImp("minutes");
-            case 'S' :
-                exitNotImp("start date");
-            case 'Y' :
-                years = atoi(optarg);
-                if(years>1)
-                    yday-=years;
-                else if(years==0)
-                    yday = 0;
-                break;
-        }
-    }
+    argp_parse(&argp, argc, argv, 0, 0, &args);
+
     if(!install_dir)
         exitError("ASSP installation directory not specified program aborting");
     if(omit_file) {
@@ -514,7 +486,7 @@ int main(int argc, char **argv) {
         exitError("Domain or email not specified and/or could not be loaded from ASSPs file");
     if(dirs_length==0)
         exitError("Folders to report on not specified please use either/or/all -n -s -v options");
-    fprintf(stdout,gettext("asspr Anti-Spam Server Proxy Report %s %s\n"),VERSION,asctime(tm_ptr));
+    fprintf(stdout,gettext("Anti-Spam Server Proxy Report %s %s\n"),argp_program_version,asctime(tm_ptr));
     short d;
     for(d=0;d<dirs_length;d++) {
         char *directory = calloc(strlen(install_dir)+strlen(dirs[d])+1,sizeof(char));
