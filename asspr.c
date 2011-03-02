@@ -285,6 +285,7 @@ short createReport(char *directory) {
 
 static struct argp_option options[] = {
     {"assp", 'a', "/path/to/assp/", 0, "location of ASSP"},
+    {"discarded", 'c', 0, 0, "include contents of the discarded folder in report"},
     {"domain", 'd', "domain.com", 0, "report on this domain only"},
     {"email-address", 'e', "email@domain.com", 0, "report on this email address only"},
     {"notspam", 'n', 0, 0, "include contents of the notspam folder in report"},
@@ -314,6 +315,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                 install_dir = arg;
             else
                 exitError("Only one assp installation directory can be specified");
+            break;
+        case 'c' :
+            addDir("discarded/");
             break;
         case 'd' :
             initRptPtr();

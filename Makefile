@@ -1,7 +1,7 @@
 CC = gcc
 FLAGS = 
 INCLUDE =
-WITH = -Wall -Wno-trigraphs 
+WITH = -w -Wall -Wno-trigraphs 
 
 all : asspr
 
