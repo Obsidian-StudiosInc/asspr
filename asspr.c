@@ -36,7 +36,7 @@
 
 #define SEPARATOR "--------------------------------------------------------------\n"
 
-const char *argp_program_version = "asspr, version 0.2.2";
+const char *argp_program_version = "asspr, version 0.2.3";
 const char *argp_program_bug_address = "support@obsidian-studios.com";
 static char doc[] = "\nCopyright 2011 Obsidian-Studios, Inc.\n"
                     "Distributed under the terms of the GNU General Public Lincense v2 "
