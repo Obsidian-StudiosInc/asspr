@@ -392,8 +392,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
             else if(!pargs->years)
                 yday = 0;
             break;
-        case ARGP_KEY_NO_ARGS:
-            argp_usage(state);
     }
     return(0);
 }
