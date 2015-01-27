@@ -36,7 +36,7 @@
 
 #define SEPARATOR "--------------------------------------------------------------\n"
 
-const char *argp_program_version = "asspr, version 0.2.4";
+const char *argp_program_version = "asspr, version 0.2.5";
 const char *argp_program_bug_address = "support@obsidian-studios.com";
 static char doc[] = "\nCopyright 2011 Obsidian-Studios, Inc.\n"
                     "Distributed under the terms of the GNU General Public License v2 "
@@ -46,9 +46,11 @@ static char doc[] = "\nCopyright 2011 Obsidian-Studios, Inc.\n"
 static char args_doc[] = "";
 
 char *install_dir = NULL;
+char *config_dir = NULL;
 char *omit_file = NULL;
 char **dirs = NULL;
 char **omit = NULL;
+unsigned short dir_buffer_length = 15;
 unsigned short dirs_length = 0;
 unsigned short omit_length = 0;
 unsigned short rpts = 0;
@@ -81,6 +83,17 @@ struct sub_report {
     unsigned int data_length;
 };
 
+char * getConfigDir() {
+    char *file_name = NULL;
+    if(config_dir) {
+        file_name = calloc(strlen(config_dir)+dir_buffer_length,sizeof(char));
+        strcpy(file_name,config_dir);
+    } else {
+        file_name = calloc(strlen(install_dir)+dir_buffer_length,sizeof(char));
+        strcpy(file_name,install_dir);
+    }
+    return(file_name);
+}
 void freeReport(struct report *report) {
     if(report->domain_allocated) {
         short i;
@@ -312,6 +325,7 @@ static struct argp_option options[] = {
     {"spam", 's', 0, 0, "include contents of the spam folder in report"},
     {"viruses", 'v', 0, 0, "include contents of the viruses folder in report"},
     {"zero", 'z', 0, 0, "include addresses that received zero email"},
+    {"config", 'C', "/path/to/config/", 0, "location of ASSP configuration files"},
     {"days", 'D', "NUM", 0, "number of days to include in report, default is 1 day, set to 0 for all"},
     {"end-date", 'E', "DATE", 0, "end date of the report"},
     {"hours", 'H', "NUM", 0, "number of hours to include in report, default is start of day till time report was run at"},
@@ -370,6 +384,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
             break;
         case 'z' :
             include_zero = 1;
+            break;
+        case 'C':
+            if(!config_dir && arg)
+                config_dir = arg;
+            else
+                exitError("Only one assp configuration directory can be specified");
             break;
         case 'D' :
             pargs->days = atoi(arg);
@@ -439,8 +459,7 @@ int main(int argc, char **argv) {
     }
     if(install_dir && !rpts_ptr) {
         FILE *file_ptr;
-        char *file_name = calloc(strlen(install_dir)+15,sizeof(char));
-        strcpy(file_name,install_dir);
+        char *file_name = getConfigDir();
         strcat(file_name,"locals");
         if(!(file_ptr = fopen(file_name,"r"))) {
             fprintf(stderr,gettext("Could not open %s (ASSP's local domains file) for reading\n"),file_name);
@@ -471,8 +490,7 @@ int main(int argc, char **argv) {
     }
     if(rpts_ptr[0].sub_count==0) {
         FILE *file_ptr;
-        char *file_name = calloc(strlen(install_dir)+15,sizeof(char));
-        strcpy(file_name,install_dir);
+        char *file_name = getConfigDir();
         strcat(file_name,"localaddresses");
         if(!(file_ptr = fopen(file_name,"r"))) {
             fprintf(stderr,gettext("Could not open %s (ASSP's local addresses file) for reading\n"),file_name);
