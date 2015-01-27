@@ -36,10 +36,10 @@
 
 #define SEPARATOR "--------------------------------------------------------------\n"
 
-const char *argp_program_version = "asspr, version 0.2.3";
+const char *argp_program_version = "asspr, version 0.2.4";
 const char *argp_program_bug_address = "support@obsidian-studios.com";
 static char doc[] = "\nCopyright 2011 Obsidian-Studios, Inc.\n"
-                    "Distributed under the terms of the GNU General Public Lincense v2 "
+                    "Distributed under the terms of the GNU General Public License v2 "
                     "This is free software: you are free to change and redistribute it. \n"
                     "There is NO WARRANTY, to the extent permitted by law.";
 /* Unused arguments description */
@@ -52,8 +52,6 @@ char **omit = NULL;
 unsigned short dirs_length = 0;
 unsigned short omit_length = 0;
 unsigned short rpts = 0;
-bool address_allocated = false;
-bool domain_allocated = false;
 bool include_zero = false;
 int yday;
 int year;
@@ -66,6 +64,7 @@ struct report *rpts_ptr = NULL;
 
 struct report {
     char *domain;
+    bool domain_allocated;
     unsigned short emails;
     unsigned short omitted;
     unsigned short total;
@@ -74,6 +73,7 @@ struct report {
 };
 struct sub_report {
     char *address;
+    bool address_allocated;
     unsigned short emails;
     unsigned short omitted;
     unsigned short total;
@@ -82,17 +82,24 @@ struct sub_report {
 };
 
 void freeReport(struct report *report) {
-    if(domain_allocated) {
+    if(report->domain_allocated) {
+        short i;
+        for(i=0;i<report->sub_count;i++) {
+            freeAddress(&(report->sub_ptr[i]));
+            free(report->sub_ptr[i].data);
+        }
         free(report->domain);
         report->domain = NULL;
+        report->domain_allocated = false;
     }
     free(report->sub_ptr);
     report->sub_ptr = NULL;
 }
-void freeAddress(char *address) {
-    if(address_allocated) {
-        free(address);
-        address = NULL;
+void freeAddress(struct sub_report *sub_ptr) {
+    if(sub_ptr->address_allocated) {
+        free(sub_ptr->address);
+        sub_ptr->address = NULL;
+        sub_ptr->address_allocated = false;
     }
 }
 void cleanup() {
@@ -105,14 +112,8 @@ void cleanup() {
     free(omit);
     if(rpts_ptr && rpts) {
         short r;
-        for(r=0;r<rpts;r++) {
-            short a;
-            for(a=0;a<rpts_ptr[r].sub_count;a++) {
-                freeAddress(rpts_ptr[r].sub_ptr[a].address);
-                free(rpts_ptr[r].sub_ptr[a].data);
-            }
+        for(r=0;r<rpts;r++)
             freeReport(&rpts_ptr[r]);
-        }
     }
     free(rpts_ptr);
 }
@@ -139,6 +140,7 @@ void exitNotImp(char *opt) {
 void initRptPtr() {
     rpts_ptr = calloc(1,sizeof(struct report));
     rpts_ptr->domain = NULL;
+    rpts_ptr->domain_allocated = false;
     rpts_ptr->emails = 0;
     rpts_ptr->omitted = 0;
     rpts_ptr->total = 0;
@@ -148,6 +150,7 @@ void initRptPtr() {
 
 void initSubPtr(struct sub_report *sub_ptr) {
     sub_ptr->address = NULL;
+    sub_ptr->address_allocated = false;
     sub_ptr->emails = 0;
     sub_ptr->omitted = 0;
     sub_ptr->total = 0;
@@ -453,6 +456,7 @@ int main(int argc, char **argv) {
             rpts_ptr = temp;
             rpts_ptr[rpts].domain = calloc(strlen(line),sizeof(char));
             strncpy(rpts_ptr[rpts].domain,line,strlen(line)-1);
+            rpts_ptr[rpts].domain_allocated = true;
             rpts_ptr[rpts].emails = 0;
             rpts_ptr[rpts].omitted = 0;
             rpts_ptr[rpts].total = 0;
@@ -464,7 +468,6 @@ int main(int argc, char **argv) {
         free(line);
         free(file_name);
         fclose(file_ptr);
-        domain_allocated = true;
     }
     if(rpts_ptr[0].sub_count==0) {
         FILE *file_ptr;
@@ -489,6 +492,7 @@ int main(int argc, char **argv) {
                     initSubPtr(&(rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count]));
                     rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address = calloc(strlen(line),sizeof(char));
                     strncpy(rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address,line,strlen(line)-1);
+                    rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address_allocated = true;
                     rpts_ptr[r].sub_count++;
                     memset(line,'\0',line_buff_size);
                 }
@@ -497,7 +501,6 @@ int main(int argc, char **argv) {
         free(line);
         free(file_name);
         fclose(file_ptr);
-        address_allocated = true;
     }
     if(!rpts_ptr)
         exitError("Domain or email not specified and/or could not be loaded from ASSPs file");
@@ -541,7 +544,7 @@ int main(int argc, char **argv) {
                                            rpts_ptr[r].sub_ptr[a].data,
                                            SEPARATOR);
                             if(d+1>=dirs_length) {
-                                freeAddress(rpts_ptr[r].sub_ptr[a].address);
+                                freeAddress(&(rpts_ptr[r].sub_ptr[a]));
                                 free(rpts_ptr[r].sub_ptr[a].data);
                                 rpts_ptr[r].sub_ptr[a].data = NULL;
                                 rpts_ptr[r].sub_ptr[a].data_length = 0;
