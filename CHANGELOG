@@ -1,4 +1,26 @@
-CHANGE LOG
+asspr changelog
+-------------------------------------------------------------------------------
+
+* 2015-01-27: v0.2.5
+- Added new option -C for specifying the configuration directory for 
+  assp if different than install
+
+* 2015-01-26: v0.2.4
+- Fixed major issue causing seg fault when ever less than 3 or more 
+  directories were specified.
+- Refactored cleanup/memory free code to correct seg fault, to only 
+  free things that have been allocated.
+- Moved global allocated code variables to per structure.
+- Fixed seg fault and other issues using valgrind
+
+* 2011-03-24: v0.2.3
+- Removed problematic code to print out short help when no options specified
+
+* 2011-03-23: v0.2.2
+- Substantial refactoring and cleanup of code
+- Additional code to free allocated memory and cleanup/reuse of existing
+- Fixed lots of memory leaks and other issues using to valgrind
+
 * 2011-02-01: v0.2.1
 - Switched to using GNU's argp instead of get_longopt for argument processing
 - Added support for assp discarded directory, might add support for others
