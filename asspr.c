@@ -2,7 +2,7 @@
  *            asspr.c
  *
  *  Anti-Spam Server Proxy Report
- *  Copyright 2011 Obsidian-Studios, Inc.
+ *  Copyright 2015 Obsidian-Studios, Inc.
  *  Author William L. Thomson Jr.
  *         wlt@obsidian-studios.com
  ****************************************************************************/
@@ -36,9 +36,9 @@
 
 #define SEPARATOR "--------------------------------------------------------------\n"
 
-const char *argp_program_version = "asspr, version 0.2.5";
+const char *argp_program_version = "asspr, version 0.2.6";
 const char *argp_program_bug_address = "support@obsidian-studios.com";
-static char doc[] = "\nCopyright 2011 Obsidian-Studios, Inc.\n"
+static char doc[] = "\nCopyright 2015 Obsidian-Studios, Inc.\n"
                     "Distributed under the terms of the GNU General Public License v2 "
                     "This is free software: you are free to change and redistribute it. \n"
                     "There is NO WARRANTY, to the extent permitted by law.";
@@ -433,7 +433,7 @@ int main(int argc, char **argv) {
     yday = tm_ptr->tm_yday;
     year = tm_ptr->tm_year;
     
-    argp_parse(&argp, argc, argv, 0, 0, &args);
+    argp_parse(&argp, argc, argv, ARGP_NO_EXIT, 0, &args);
 
     if(!install_dir)
         exitError("ASSP installation directory not specified program aborting");
