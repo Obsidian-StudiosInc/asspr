@@ -20,9 +20,6 @@ test :
 
 install:
 	mv asspr /usr/sbin/
-	cp asspr.8.gz  /usr/share/man/man8/
-	chown root /usr/sbin/asspr
-	chgrp root /usr/sbin/asspr
-	chown root /usr/share/man/man8/asspr.8.gz
-	chgrp root /usr/share/man/man8/asspr.8.gz
-
+	gzip -c asspr.8 > /usr/share/man/man8/asspr.8.gz
+	chown root:root /usr/sbin/asspr
+	chown root:root /usr/share/man/man8/asspr.8.gz

@@ -1,0 +1,90 @@
+.\" Process this file with
+.\" groff -man -Tascii asspr.8
+.\"
+.TH asspr 8 "February 10, 2015" asspr
+.SH NAME
+asspr \- Anti Spam Server Proxy Report
+.SH SYNOPSIS
+.BI "asspr -a " "/path/to/assp"
+.BR "[" options... "]"
+.SH DESCRIPTION
+.B asspr
+creates a report by gathering information on the emails in ASSP's directories.
+At the moment only spam and notspam folders. Reports contain the file name,
+To:, From:, and Subject: fields of each email in each folder. Providing a means
+to monitor the emails and ASSPs activity. By default reports start at the
+beginning of the day till the time the report is run. If run at 11:59PM, report
+will include that days emails.
+.SH OPTIONS
+.TP
+.BI "\-a,  \-\-assp=" "/path/to/assp/"
+assp requires an absolute directory path to the assp installation as an argument.
+.TP
+.B "\-c,  \-\-discarded"
+include contents of the discarded folder in report
+.TP
+.BR "\-d,  \-\-domain=" "domain"
+report on this domain only. Otherwise report will include all domains in ASSP's
+.I locals
+file.
+.TP
+.BR "\-e,  \-\-email-address=" "email-address"
+report on this email address only. Otherwise report will include any email
+address for each domain in the report
+.TP
+.B "\-n,  \-\-notspam"
+include contents of the notspam folder in report
+.TP
+.BI "\-o,  \-\-omit-file=" "/path/to/omit-file"
+absolute path to a file containing strings. One per line to match against
+subjects containing the string, emails to be omitted from the report.
+.TP
+.B "\-s,  \-\-spam"
+include contents of the spam folder in report
+.TP
+.B "\-v,  \-\-viruses"
+include contents of the viruses folder in report
+.TP
+.B "\-z,  \-\-zero"
+include addresses that received zero email
+.TP
+.BI "\-C,  \-\-config=" "/path/to/config/"
+assp requires an absolute directory path to the assp configuration files as an argument.
+.TP
+.BR "\-D,  \-\-days=" "days"
+number of days to include in report. Default is 1 day.
+If specified a value is required. Set to 0 for all days.
+.TP
+.BR "\-H,  \-\-hours=" "hours"
+number of hours to include in report. Default is start of day till time
+report was run at. Set to 0 for all hours.
+.TP
+.BR "\-M,  \-\-minutes=" "minutes"
+number of minutes to include in report. If specified a value is required.
+.TP
+.BR "\-S,  \-\-start-date=" "date"
+start date of the report
+.TP
+.BR "\-E,  \-\-end-date=" "date"
+end date of the report
+.TP
+.BR "\-Y,  \-\-years=" "years"
+number of years to include in report default is 1 year.
+If specified a value is required. Set to 0 for all years.
+.SH GNU STANDARD OPTIONS
+.TP
+.BR "\-\-help"
+Print a usage message on standard output and exit successfully.
+.TP
+.BR "\-\-version"
+Print version information on standard  output,  then  exit  successfully.
+.TP
+.BR "\-\-"
+Terminate option list.
+.SH NOTES
+Do not stack options that do not require an argument. They will not be read
+properly and most likely will be ignored.
+.SH BUGS
+Please report any bugs to <support@obsidian-studios.com>
+.SH AUTHOR
+William L. Thomson Jr. <wlt@obsidian-studios.com>
