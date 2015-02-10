@@ -1,5 +1,12 @@
 asspr changelog
--------------------------------------------------------------------------------
+--------------------------------------------------------------------
+
+* 2015-02-10: v0.2.6
+- Set ARGP_NO_EXIT flag so that argp will not exit on help, version,
+  or other options causing a memory leak
+- Switched man page to plain text file vs binary
+- Modified makefile to create man page archive on install rather 
+  than copy pre-shipped binary
 
 * 2015-01-27: v0.2.5
 - Added new option -C for specifying the configuration directory for 
