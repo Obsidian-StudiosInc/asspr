@@ -1,21 +1,27 @@
 asspr changelog
 --------------------------------------------------------------------
 
+* 2016-03-08: v0.2.7
+- Initial autotools build system, move single source file to src
+  subdirectory. Added default project files for autotools.
+- Added header file with function prototypes and struc declarations
+- Added header file for project version
+
 * 2015-02-10: v0.2.6
 - Set ARGP_NO_EXIT flag so that argp will not exit on help, version,
   or other options causing a memory leak
 - Switched man page to plain text file vs binary
-- Modified makefile to create man page archive on install rather 
+- Modified makefile to create man page archive on install rather
   than copy pre-shipped binary
 
 * 2015-01-27: v0.2.5
-- Added new option -C for specifying the configuration directory for 
+- Added new option -C for specifying the configuration directory for
   assp if different than install
 
 * 2015-01-26: v0.2.4
-- Fixed major issue causing seg fault when ever less than 3 or more 
+- Fixed major issue causing seg fault when ever less than 3 or more
   directories were specified.
-- Refactored cleanup/memory free code to correct seg fault, to only 
+- Refactored cleanup/memory free code to correct seg fault, to only
   free things that have been allocated.
 - Moved global allocated code variables to per structure.
 - Fixed seg fault and other issues using valgrind
@@ -50,7 +56,7 @@ asspr changelog
   reporting period
 
 * 2005-08-08: v0.1.4
-- Fixed problem where unallocated pointers would be de-allocated causing 
+- Fixed problem where unallocated pointers would be de-allocated causing
   a segfault on the next run
 
 * 2005-08-04: v0.1.3
