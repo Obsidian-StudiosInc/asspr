@@ -23,22 +23,20 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <stdbool.h>
+#include "../include/asspr.h"
+#include "../include/version.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
-#include <argp.h>
 #include <sys/dir.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define SEPARATOR "--------------------------------------------------------------\n"
-
-const char *argp_program_version = "asspr, version 0.2.6";
-const char *argp_program_bug_address = "support@obsidian-studios.com";
-static char doc[] = "\nCopyright 2015 Obsidian-Studios, Inc.\n"
+const char *argp_program_version = ASSPR_VERSION_STR;
+const char *argp_program_bug_address = ASSPR_CONTACT;
+static char doc[] = "\nCopyright 2016 Obsidian-Studios, Inc.\n"
                     "Distributed under the terms of the GNU General Public License v2 "
                     "This is free software: you are free to change and redistribute it. \n"
                     "There is NO WARRANTY, to the extent permitted by law.";
@@ -63,25 +61,6 @@ unsigned short buffer_size = sizeof(char)*2048;
 unsigned short line_buff_size = sizeof(char)*256;
 struct tm *tm_ptr = NULL;
 struct report *rpts_ptr = NULL;
-
-struct report {
-    char *domain;
-    bool domain_allocated;
-    unsigned short emails;
-    unsigned short omitted;
-    unsigned short total;
-    struct sub_report *sub_ptr;
-    unsigned short sub_count;
-};
-struct sub_report {
-    char *address;
-    bool address_allocated;
-    unsigned short emails;
-    unsigned short omitted;
-    unsigned short total;
-    char *data;
-    unsigned int data_length;
-};
 
 char * getConfigDir() {
     char *file_name = NULL;
@@ -315,31 +294,6 @@ short createReport(char *directory) {
     return(1);
 }
 
-static struct argp_option options[] = {
-    {"assp", 'a', "/path/to/assp/", 0, "location of ASSP"},
-    {"discarded", 'c', 0, 0, "include contents of the discarded folder in report"},
-    {"domain", 'd', "domain.com", 0, "report on this domain only"},
-    {"email-address", 'e', "email@domain.com", 0, "report on this email address only"},
-    {"notspam", 'n', 0, 0, "include contents of the notspam folder in report"},
-    {"omit-file", 'o', "/path/to/omit-file", 0, "absolute path to a file containing strings in subjects of emails to be omitted"},
-    {"spam", 's', 0, 0, "include contents of the spam folder in report"},
-    {"viruses", 'v', 0, 0, "include contents of the viruses folder in report"},
-    {"zero", 'z', 0, 0, "include addresses that received zero email"},
-    {"config", 'C', "/path/to/config/", 0, "location of ASSP configuration files"},
-    {"days", 'D', "NUM", 0, "number of days to include in report, default is 1 day, set to 0 for all"},
-    {"end-date", 'E', "DATE", 0, "end date of the report"},
-    {"hours", 'H', "NUM", 0, "number of hours to include in report, default is start of day till time report was run at"},
-    {"minutes", 'M', "NUM", 0, "number of minutes to include in report"},
-    {"start-date", 'S', "DATE", 0, "start date of the report"},
-    {"years", 'Y', "YEAR", 0, "year of report default is the current year, set to 0 for all"}
-};
-
-struct args {
-    short c;
-    short days;
-    short years;
-};
-
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     struct args *pargs = state->input;
     switch(key) {
@@ -426,13 +380,13 @@ int main(int argc, char **argv) {
     args.c = 0;
     args.days = -1;
     args.years = -1;
-    
+
     time_t time_now;
     time(&time_now);
     tm_ptr = localtime(&time_now);
     yday = tm_ptr->tm_yday;
     year = tm_ptr->tm_year;
-    
+
     argp_parse(&argp, argc, argv, ARGP_NO_EXIT, 0, &args);
 
     if(!install_dir)
