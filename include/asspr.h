@@ -31,52 +31,18 @@
 #include <time.h>
 #include <argp.h>
 
-struct report {
-    char *domain;
-    bool domain_allocated;
-    unsigned short emails;
-    unsigned short omitted;
-    unsigned short total;
-    struct sub_report *sub_ptr;
-    unsigned short sub_count;
+/**
+ * Program arguments struct
+ */
+struct args {
+    short c;
+    short days;
+    short years;
 };
 
-struct sub_report {
-    char *address;
-    bool address_allocated;
-    unsigned short emails;
-    unsigned short omitted;
-    unsigned short total;
-    char *data;
-    unsigned int data_length;
-};
-
-char * getConfigDir();
-
-void freeReport(struct report *report);
-
-void freeAddress(struct sub_report *sub_ptr);
-
-void cleanup();
-
-void exitError(char *msg);
-
-void exitClean();
-
-void exitNotImp(char *opt);
-
-void initRptPtr();
-
-void initSubPtr(struct sub_report *sub_ptr);
-
-char ** addDir(char *dir);
-
-short omitEmail(char *subject);
-
-short inDateRange(struct tm *file_tm_ptr);
-
-short createReport(char *directory);
-
+/**
+ * GNU argp options struct
+ */
 static struct argp_option options[] = {
     {0,0,0,0,"ASSP Paths:"},
     {"assp", 'a', "/path/to/assp/", 0, "location of ASSP"},
@@ -100,8 +66,116 @@ static struct argp_option options[] = {
     {0}
 };
 
-struct args {
-    short c;
-    short days;
-    short years;
+/**
+ * Report struct
+ */
+struct report {
+    char *domain;
+    bool domain_allocated;
+    unsigned short emails;
+    unsigned short omitted;
+    unsigned short total;
+    struct sub_report *sub_ptr;
+    unsigned short sub_count;
 };
+
+/**
+ * Sub Report struct
+ */
+struct sub_report {
+    char *address;
+    bool address_allocated;
+    unsigned short emails;
+    unsigned short omitted;
+    unsigned short total;
+    char *data;
+    unsigned int data_length;
+};
+
+/**
+ * Add a directory to the report
+ *
+ * @param dir a string containing a directory to add to the report
+ */
+char ** addDir(char *dir);
+
+/**
+ * Cleanup before exit, free allocated memory
+ */
+void cleanup();
+
+/**
+ * Create a report
+ *
+ * @param directory a string containing a directory to create a report for
+ * @return short, 1 for success, 0 for failure. The short must NOT be freed!
+ */
+short createReport(char *directory);
+
+/**
+ * Exit clean/normally
+ */
+void exitClean();
+
+/**
+ * Exit with an error code and message
+ *  
+ * @param msg a string containing an error message
+ */
+void exitError(char *msg);
+
+/**
+ * Exit with an error code and not implemented message
+ *  
+ * @param opt a string containing an option not implemented
+ */
+void exitNotImp(char *opt);
+
+/**
+ * Frees the allocated memory used by an array of report structs
+ *
+ * @param report a pointer to an array of report structs
+ */
+void freeReport(struct report *report);
+
+/**
+ * Frees the allocated memory used by an address in a sub report struct
+ *
+ * @param sub_ptr a pointer to a sub report struct
+ */
+void freeAddress(struct sub_report *sub_ptr);
+
+/**
+ * Get the config directory
+ *
+ * @return a string containing the value. The string must be freed!
+ */
+char * getConfigDir();
+
+/**
+ * Check if a file is in the date range of the report
+ *
+ * @param file_tm_ptr a pointer to a file's time struct
+ * @return short, 1 for success, 0 for failure. The short must NOT be freed!
+ */
+short inDateRange(struct tm *file_tm_ptr);
+
+/**
+ * Initialize main rpts_ptr array
+ */
+void initRptPtr();
+
+/**
+ * Initialize a sub_ptr
+ * 
+ * @param sub_ptr a pointer to a sub report struct
+ */
+void initSubPtr(struct sub_report *sub_ptr);
+
+/**
+ * Check if an email should be omitted from the report
+ *
+ * @param subject a string containing an email's subject
+ * @return short, 1 for success, 0 for failure. The short must NOT be freed!
+ */
+short omitEmail(char *subject);
