@@ -62,6 +62,11 @@ unsigned short line_buff_size = sizeof(char)*256;
 struct tm *tm_ptr = NULL;
 struct report *rpts_ptr = NULL;
 
+/**
+ * Get the config directory
+ *
+ * @return a string containing the value. The string must be freed!
+ */
 char * getConfigDir() {
     char *file_name = NULL;
     if(config_dir) {
@@ -73,6 +78,12 @@ char * getConfigDir() {
     }
     return(file_name);
 }
+
+/**
+ * Frees the allocated memory used by an array of report structs
+ *
+ * @param report a pointer to an array of report structs
+ */
 void freeReport(struct report *report) {
     if(report->domain_allocated) {
         short i;
@@ -87,6 +98,12 @@ void freeReport(struct report *report) {
     free(report->sub_ptr);
     report->sub_ptr = NULL;
 }
+
+/**
+ * Frees the allocated memory used by an address in a sub report struct
+ *
+ * @param sub_ptr a pointer to a sub report struct
+ */
 void freeAddress(struct sub_report *sub_ptr) {
     if(sub_ptr->address_allocated) {
         free(sub_ptr->address);
@@ -94,6 +111,10 @@ void freeAddress(struct sub_report *sub_ptr) {
         sub_ptr->address_allocated = false;
     }
 }
+
+/**
+ * Cleanup before exit, free allocated memory
+ */
 void cleanup() {
     free(dirs);
     if(omit && omit_length) {
@@ -110,17 +131,30 @@ void cleanup() {
     free(rpts_ptr);
 }
 
+/**
+ * Exit with an error code and message
+ *  
+ * @param msg a string containing an error message
+ */
 void exitError(char *msg) {
     fprintf(stderr,gettext("Error: %s\n"),msg);
     cleanup();
     _exit(EXIT_FAILURE);
 }
 
+/**
+ * Exit clean/normally
+ */
 void exitClean() {
     cleanup();
     _exit(EXIT_SUCCESS);
 }
 
+/**
+ * Exit with an error code and not implemented message
+ *  
+ * @param opt a string containing an option not implemented
+ */
 void exitNotImp(char *opt) {
     fprintf(stderr,gettext("Error: %s option has not been implemented.\n "
                            "Please contact support@obsidian-studios.com "
@@ -129,6 +163,9 @@ void exitNotImp(char *opt) {
     _exit(EXIT_FAILURE);
 }
 
+/**
+ * Initialize main rpts_ptr array
+ */
 void initRptPtr() {
     rpts_ptr = calloc(1,sizeof(struct report));
     rpts_ptr->domain = NULL;
@@ -140,6 +177,11 @@ void initRptPtr() {
     rpts = 0;
 }
 
+/**
+ * Initialize a sub_ptr
+ * 
+ * @param sub_ptr a pointer to a sub report struct
+ */
 void initSubPtr(struct sub_report *sub_ptr) {
     sub_ptr->address = NULL;
     sub_ptr->address_allocated = false;
@@ -150,6 +192,11 @@ void initSubPtr(struct sub_report *sub_ptr) {
     sub_ptr->data_length = buffer_size;
 }
 
+/**
+ * Add a directory to the report
+ *
+ * @param dir a string containing a directory to add to the report
+ */
 char ** addDir(char *dir) {
     dirs_length++;
     char **temp = realloc(dirs,sizeof(char**)*dirs_length);
@@ -158,6 +205,13 @@ char ** addDir(char *dir) {
     dirs = temp;
     dirs[dirs_length-1] = dir;
 }
+
+/**
+ * Check if an email should be omitted from the report
+ *
+ * @param subject a string containing an email's subject
+ * @return short, 1 for success, 0 for failure. The short must NOT be freed!
+ */
 short omitEmail(char *subject) {
     if(!omit || !omit_length)
         return(0);
@@ -168,6 +222,12 @@ short omitEmail(char *subject) {
     return(0);
 }
 
+/**
+ * Check if a file is in the date range of the report
+ *
+ * @param file_tm_ptr a pointer to a file's time struct
+ * @return short, 1 for success, 0 for failure. The short must NOT be freed!
+ */
 short inDateRange(struct tm *file_tm_ptr) {
     if((!yday || yday<=file_tm_ptr->tm_yday) &&
        (!year || year<=file_tm_ptr->tm_year))
@@ -176,6 +236,12 @@ short inDateRange(struct tm *file_tm_ptr) {
         return(0);
 }
 
+/**
+ * Create a report
+ *
+ * @param directory a string containing a directory to create a report for
+ * @return short, 1 for success, 0 for failure. The short must NOT be freed!
+ */
 short createReport(char *directory) {
     DIR *dp;
     if(!(dp = opendir(directory))) {
