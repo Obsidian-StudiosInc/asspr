@@ -8,9 +8,11 @@ it should be able to compile and run on any platform.
 
 INSTALLATION
 ------------
-A Makefile is provided to not only compile but install asspr.
+GNU Autotools are used to build and install asspr
 
-make
+autoreconf -f -i
+automake
+./configure
 make install
 
 and your done.
