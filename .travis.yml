@@ -15,6 +15,6 @@ addons:
       name: "Obsidian-StudiosInc/asspr"
       description: "Build submitted via Travis CI"
     notification_email: wlt@o-sinc.com
-    build_command_prepend: "autoreconf -f -i && automake ./configure; make clean"
+    build_command_prepend: "autoreconf -f -i && automake && ./configure; make clean"
     build_command:   "make -j 4"
     branch_pattern: master
