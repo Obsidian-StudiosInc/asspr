@@ -1,3 +1,20 @@
 language: c
 compiler: gcc
 script: autoreconf -f -i && automake && ./configure && make
+
+env:
+  global:
+   - secure: "mKKbnmoZZCQJqUu/9zkQM/ZihkPkUqIYYKrEoeZhGZFpkLzG5U7xt7i/CmzU/VYZaEFtXrqFTzpRJUeXu7JehYIxwugC+qgAgzSpNnJO8+9FfKN2Sk/daapYb7BaCPoIiDtpVaZTtGbSWD8SnDvr2JzixxUNVt3I5nS8uTqn6zbYZvZhZ0ROm5EgFZCSZn1pli3nC4Hae21t8xKI8Q51YUnobKpGoQA1+nco6rLOhz8MHX1KHr8IV3U7txMYqy9kSL5bbii4cieMVevUEqa13Ui77EOQ1Iz5Ps87pEMjtVgjwe9fnr53AX9wi+p8g7k1srupW/ywFMx1PsTwMZ/IYdt+ZBQZPSBdWAyirgDgTjBXRKghPYRLQ6pbL0r8VXJP/9CD2CJV7qKsTSOs/zsFX5BwDPGaMIwhw9UgFtnTcg9pxzVjbxeArEiUK4R6xptbxXCdYFR97xxeDcwK6TvI+gCYLAtibxvT7Bldg0wYrAD1NbgOlbgDKXJQdO+CyzIvoJ6K3p2HgMnAxlCsnXDA7LLGVOBLbNy0zPAkL8GAXnCyu0ej+g0B2gikF/e2tbrmObsiGvX0fD1ngtmzktSK8yN7eKdmMSOMycqEaShgpzQ9ROPEiHNnS7nuAxcwSZMrdKLtwaP6tCFxESGTikOZOJ7zTGNQarUSesIWVlflAg8="
+
+before_install:
+      - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+
+addons:
+  coverity_scan:
+    project:
+      name: "Obsidian-StudiosInc/asspr"
+      description: "Build submitted via Travis CI"
+    notification_email: wlt@o-sinc.com
+    build_command_prepend: "autoreconf -f -i && automake./configure; make clean"
+    build_command:   "make -j 4"
+    branch_pattern: coverity_scan
