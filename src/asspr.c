@@ -31,6 +31,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/dir.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -259,20 +260,29 @@ short createReport(char *directory) {
         char *file_name = calloc(line_buff_size,sizeof(char));
         strcpy(file_name,directory);
         strcat(file_name,dir->d_name);
+        FILE *fp;
+        if(!(fp = fopen(file_name,"r"))) {
+            fprintf(stderr,gettext("Could not open for reading %s\n"),file_name);
+            free(file_name);
+            continue;
+        }
+        if(flock(fileno(fp), LOCK_SH)==-1) {
+            fprintf(stderr,gettext("Could not obtain lock %s\n"),file_name);
+            fclose(fp);
+            free(file_name);
+            continue;
+        }
         struct stat buf;
-        if(stat(file_name,&buf)==-1) {
+        if(fstat(fileno(fp),&buf)==-1) {
+            fprintf(stderr,gettext("Could not stat %s\n"),file_name);
+            flock(fileno(fp), LOCK_UN);
+            fclose(fp);
             free(file_name);
             continue;
         }
         time_t file_time = buf.st_mtime;
         struct tm *file_tm_ptr = localtime(&file_time);
         if(inDateRange(file_tm_ptr)) {
-            FILE *fp;
-            if(!(fp = fopen(file_name,"r"))) {
-                fprintf(stderr,gettext("Could open for reading %s\n"),file_name);
-                free(file_name);
-                continue;
-            }
             int results = 0;
             char *line = calloc(line_buff_size,sizeof(char));
             char *to = calloc(line_buff_size,sizeof(char));
@@ -313,7 +323,6 @@ short createReport(char *directory) {
                 if(results==3)
                     break;
             }
-            fclose(fp);
             if(results==3) {
                 int r;
                 for(r=0;r<rpts;r++) {
@@ -357,6 +366,8 @@ short createReport(char *directory) {
             free(from);
             free(subject);
         }
+        flock(fileno(fp), LOCK_UN);
+        fclose(fp);
         free(file_name);
     }
     closedir(dp);
