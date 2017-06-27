@@ -2,6 +2,7 @@
 [![License](http://img.shields.io/badge/license-GPLv3-9977bb.svg?style=plastic)](https://github.com/Obsidian-StudiosInc/asspr/blob/master/LICENSE)
 [![Build Status](https://img.shields.io/travis/Obsidian-StudiosInc/asspr/master.svg?colorA=9977bb&style=plastic)](https://travis-ci.org/Obsidian-StudiosInc/asspr)
 [![Build Status](https://img.shields.io/shippable/5840e5c292fdea1000365227/master.svg?colorA=9977bb&style=plastic)](https://app.shippable.com/projects/5840e5c292fdea1000365227/)
+[![Code Quality](https://img.shields.io/coverity/scan/12325.svg?colorA=9977bb&style=plastic)](https://scan.coverity.com/projects/obsidian-studiosinc-asspr)
 
 Anti-Spam Server Proxy Report is a small program written in C that 
 creates a report based on the emails in 
@@ -17,14 +18,12 @@ emails. Ideally meant to be run once daily, but some modifications have
 been made to allow for other time frames. Please open issues for any 
 bugs, feature requests, enhancements, etc.
 
-##INSTALLATION
+## INSTALLATION
 
 GNU Autotools are used to build and install asspr
 
 ```bash
-autoreconf -f -i
-automake
-./configure
+./autogen.sh
 make install
 ```
 
