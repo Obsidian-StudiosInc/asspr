@@ -199,7 +199,7 @@ void initSubPtr(struct sub_report *sub_ptr) {
  */
 char ** addDir(char *dir) {
     dirs_length++;
-    char **temp = realloc(dirs,sizeof(char**)*dirs_length);
+    char **temp = realloc(dirs,sizeof(char*)*dirs_length);
     if(!temp)
         exitError("Could not increase directory buffer large enough to hold all directories");
     dirs = temp;
@@ -467,7 +467,7 @@ int main(int argc, char **argv) {
         char *line = calloc(line_buff_size+1,sizeof(char));
         while(fgets(line,line_buff_size,omit_file_ptr)) {
             if(strncmp(line,"\n",1)) {
-                char **temp = realloc(omit,sizeof(char**)*(omit_length+1));
+                char **temp = realloc(omit,sizeof(char*)*(omit_length+1));
                 if(!temp)
                     exitError("Could not increase buffer large enough to hold all local omit");
                 omit = temp;
