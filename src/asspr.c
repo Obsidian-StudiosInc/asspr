@@ -204,6 +204,7 @@ char ** addDir(char *dir) {
         exitError("Could not increase directory buffer large enough to hold all directories");
     dirs = temp;
     dirs[dirs_length-1] = dir;
+    return(dirs);
 }
 
 /**
