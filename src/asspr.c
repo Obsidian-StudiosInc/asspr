@@ -260,6 +260,7 @@ short createReport(char *directory) {
         strcat(file_name,dir->d_name);
         struct stat buf;
         if(stat(file_name,&buf)==-1) {
+            free(file_name);
             continue;
         }
         time_t file_time = buf.st_mtime;
@@ -268,6 +269,7 @@ short createReport(char *directory) {
             FILE *fp;
             if(!(fp = fopen(file_name,"r"))) {
                 fprintf(stderr,gettext("Could open for reading %s\n"),file_name);
+                free(file_name);
                 continue;
             }
             int results = 0;
