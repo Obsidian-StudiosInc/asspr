@@ -72,10 +72,10 @@ char * getConfigDir() {
     char *file_name = NULL;
     if(config_dir) {
         file_name = calloc(strlen(config_dir)+dir_buffer_length,sizeof(char));
-        strcpy(file_name,config_dir);
+        strncpy(file_name,config_dir,strlen(config_dir)+1);
     } else {
         file_name = calloc(strlen(install_dir)+dir_buffer_length,sizeof(char));
-        strcpy(file_name,install_dir);
+        strncpy(file_name,install_dir,strlen(install_dir)+1);
     }
     return(file_name);
 }
@@ -258,8 +258,8 @@ short createReport(char *directory) {
            !strncasecmp(dir->d_name,"..",2))
             continue;
         char *file_name = calloc(line_buff_size,sizeof(char));
-        strcpy(file_name,directory);
-        strcat(file_name,dir->d_name);
+        strncpy(file_name,directory,strlen(directory)+1);
+        strncat(file_name,dir->d_name,strlen(dir->d_name)+1);
         FILE *fp;
         if(!(fp = fopen(file_name,"r"))) {
             fprintf(stderr,gettext("Could not open for reading %s\n"),file_name);
@@ -290,10 +290,10 @@ short createReport(char *directory) {
             char *subject = calloc(line_buff_size,sizeof(char));
             while(fgets(line,line_buff_size-1,fp)) {
                 if(!strncasecmp(line,"From",4)) {
-                    strcpy(from,line);
+                    strncpy(from,line,strlen(line)+1);
                     results++;
                 } else if(!strncasecmp(line,"To",2)) {
-                    strcpy(to,line);
+                    strncpy(to,line,strlen(line)+1);
                     results++;
                 } else if(!strncasecmp(line,"Subject",7)) {
                     if(omitEmail(line)) {
@@ -315,7 +315,7 @@ short createReport(char *directory) {
                         }
                         break;
                     } else {
-                        strcpy(subject,line);
+                        strncpy(subject,line,strlen(line)+1);
                         results++;
                     }
                 }
@@ -350,7 +350,7 @@ short createReport(char *directory) {
                                     }
                                     rpts_ptr[r].sub_ptr[a].data = temp;
                                 }
-                                strcat(rpts_ptr[r].sub_ptr[a].data,buffer);
+                                strncat(rpts_ptr[r].sub_ptr[a].data,buffer,strlen(buffer)+1);
                                 rpts_ptr[r].sub_ptr[a].emails++;
                                 rpts_ptr[r].sub_ptr[a].total = rpts_ptr[r].sub_ptr[a].emails + rpts_ptr[r].sub_ptr[a].omitted;
                                 rpts_ptr[r].emails++;
@@ -494,7 +494,7 @@ int main(int argc, char **argv) {
     if(install_dir && !rpts_ptr) {
         FILE *file_ptr;
         char *file_name = getConfigDir();
-        strcat(file_name,"locals");
+        strncat(file_name,"locals",7);
         if(!(file_ptr = fopen(file_name,"r"))) {
             fprintf(stderr,gettext("Could not open %s (ASSP's local domains file) for reading\n"),file_name);
             free(file_name);
@@ -525,7 +525,7 @@ int main(int argc, char **argv) {
     if(rpts_ptr[0].sub_count==0) {
         FILE *file_ptr;
         char *file_name = getConfigDir();
-        strcat(file_name,"localaddresses");
+        strncat(file_name,"localaddresses",15);
         if(!(file_ptr = fopen(file_name,"r"))) {
             fprintf(stderr,gettext("Could not open %s (ASSP's local addresses file) for reading\n"),file_name);
             free(file_name);
@@ -562,8 +562,8 @@ int main(int argc, char **argv) {
     short d;
     for(d=0;d<dirs_length;d++) {
         char *directory = calloc(strlen(install_dir)+strlen(dirs[d])+1,sizeof(char));
-        strcpy(directory,install_dir);
-        strcat(directory,dirs[d]);
+        strncpy(directory,install_dir,strlen(install_dir)+1);
+        strncat(directory,dirs[d],strlen(dirs[d])+1);
         if(createReport(directory)) {
             short r;
             for(r=0;r<rpts;r++) {
