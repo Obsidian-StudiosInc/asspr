@@ -7,15 +7,20 @@ cache:
   directories:
     - $HOME/.sonar/cache
 
-addons:
-  sonarcloud:
-    organization: obsidian-studiosinc-github
-    token:
-      secure: K3LkbiZNaUuJTYMi4ysVFk9ZtUxiCNLa8eRQVSF2KxrtN+u8SQPY0S5b8Xu0l7O6LKLKTdAwSKCM5r2AH2YOAMP7WRz9hzsVCdkwWHdTQ6Q3BIg2HT8ewrFj8BYvO1/VmoYmrTYSXQyVEVw+vU4Nf15Nxj9ppbiKRxOrY+FhVkCuYxuJMiKT22e22At38Dna68q8ki2thrmT3UyaK2XO40rF2fxg2sLbmxuAYzzU4o2D35+QPs0OPSMDF2W8m1pkewTKeMCAN0dINVM5W9Wcf/9Ga9LGvz5FX13EpuJiMZ4M4KnFp0o5fjuEEGbU5dJK272pHn9Em7ZhplYahKsP2Yf0vtBlihXMz4xoGEOizY5mnkCvLmyYMYhY1YpyQnLaZ+OvtTkP/BemZMGdGzujnFa+rh4Y7Xm5zVawMwAbGKv8TlqlYUpvbGeNIzx7mY826DW1HpPWJ3/YjzgfDcMhPlg5LWUSWb8qFZEyvm3xztper7u33iGmkDtLVXlhJig2cLd/NJiJZd0PNcLxE8yvCvdm1NTlqjd1aMdEtZZE+DFFuUhdjJpUS8cq1+M/4c9l5I+MVPm6OTzOzXuc9evNKIJnt4YA72dkayfaekwvwQeKA3ruS6B42FdyYELH6urwH35mWXz1JkDisKW/dVDJaBJwPW5dxlqA6QA4NtXcsA4=
+jobs:
+  include:
+    - stage: Test builds
+    - stage: Sonar Cloud
+      env: SONAR="0"
+      addons:
+        sonarcloud:
+          organization: obsidian-studiosinc-github
+          token:
+            secure: K3LkbiZNaUuJTYMi4ysVFk9ZtUxiCNLa8eRQVSF2KxrtN+u8SQPY0S5b8Xu0l7O6LKLKTdAwSKCM5r2AH2YOAMP7WRz9hzsVCdkwWHdTQ6Q3BIg2HT8ewrFj8BYvO1/VmoYmrTYSXQyVEVw+vU4Nf15Nxj9ppbiKRxOrY+FhVkCuYxuJMiKT22e22At38Dna68q8ki2thrmT3UyaK2XO40rF2fxg2sLbmxuAYzzU4o2D35+QPs0OPSMDF2W8m1pkewTKeMCAN0dINVM5W9Wcf/9Ga9LGvz5FX13EpuJiMZ4M4KnFp0o5fjuEEGbU5dJK272pHn9Em7ZhplYahKsP2Yf0vtBlihXMz4xoGEOizY5mnkCvLmyYMYhY1YpyQnLaZ+OvtTkP/BemZMGdGzujnFa+rh4Y7Xm5zVawMwAbGKv8TlqlYUpvbGeNIzx7mY826DW1HpPWJ3/YjzgfDcMhPlg5LWUSWb8qFZEyvm3xztper7u33iGmkDtLVXlhJig2cLd/NJiJZd0PNcLxE8yvCvdm1NTlqjd1aMdEtZZE+DFFuUhdjJpUS8cq1+M/4c9l5I+MVPm6OTzOzXuc9evNKIJnt4YA72dkayfaekwvwQeKA3ruS6B42FdyYELH6urwH35mWXz1JkDisKW/dVDJaBJwPW5dxlqA6QA4NtXcsA4=
 
 script:
   - autoreconf -f -i
   - automake
   - ./configure
-  - build-wrapper-linux-x86-64 --out-dir bw-output make
-  - sonar-scanner
+  - if [ "${SONAR}" = "0" ]; then build-wrapper-linux-x86-64 --out-dir bw-output make; fi
+  - if [ "${SONAR}" = "0" ]; then sonar-scanner; else make; fi
