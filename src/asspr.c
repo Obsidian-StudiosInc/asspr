@@ -23,7 +23,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "../include/asspr.h"
+#include "asspr.h"
 #include "config.h"
 
 #include <stdio.h>
