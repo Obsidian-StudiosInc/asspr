@@ -19,6 +19,8 @@ install-sh
 missing
 nbproject/
 src/asspr
+src/config.h
+src/config.h.in
 src/Makefile
 src/Makefile.in
 stamp-h1
