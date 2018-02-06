@@ -1,20 +1,19 @@
 language: c
 compiler: gcc
-script: autoreconf -f -i && automake && ./configure && make
 
-env:
-  global:
-   - secure: "mKKbnmoZZCQJqUu/9zkQM/ZihkPkUqIYYKrEoeZhGZFpkLzG5U7xt7i/CmzU/VYZaEFtXrqFTzpRJUeXu7JehYIxwugC+qgAgzSpNnJO8+9FfKN2Sk/daapYb7BaCPoIiDtpVaZTtGbSWD8SnDvr2JzixxUNVt3I5nS8uTqn6zbYZvZhZ0ROm5EgFZCSZn1pli3nC4Hae21t8xKI8Q51YUnobKpGoQA1+nco6rLOhz8MHX1KHr8IV3U7txMYqy9kSL5bbii4cieMVevUEqa13Ui77EOQ1Iz5Ps87pEMjtVgjwe9fnr53AX9wi+p8g7k1srupW/ywFMx1PsTwMZ/IYdt+ZBQZPSBdWAyirgDgTjBXRKghPYRLQ6pbL0r8VXJP/9CD2CJV7qKsTSOs/zsFX5BwDPGaMIwhw9UgFtnTcg9pxzVjbxeArEiUK4R6xptbxXCdYFR97xxeDcwK6TvI+gCYLAtibxvT7Bldg0wYrAD1NbgOlbgDKXJQdO+CyzIvoJ6K3p2HgMnAxlCsnXDA7LLGVOBLbNy0zPAkL8GAXnCyu0ej+g0B2gikF/e2tbrmObsiGvX0fD1ngtmzktSK8yN7eKdmMSOMycqEaShgpzQ9ROPEiHNnS7nuAxcwSZMrdKLtwaP6tCFxESGTikOZOJ7zTGNQarUSesIWVlflAg8="
-
-before_install:
-      - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+cache:
+  directories:
+    - $HOME/.sonar/cache
 
 addons:
-  coverity_scan:
-    project:
-      name: "Obsidian-StudiosInc/asspr"
-      description: "Build submitted via Travis CI"
-    notification_email: wlt@o-sinc.com
-    build_command_prepend: "autoreconf -f -i && automake && ./configure; make clean"
-    build_command:   "make -j 4"
-    branch_pattern: master
+  sonarcloud:
+  organization: obsidian-studiosinc-github
+    token:
+      secure: K3LkbiZNaUuJTYMi4ysVFk9ZtUxiCNLa8eRQVSF2KxrtN+u8SQPY0S5b8Xu0l7O6LKLKTdAwSKCM5r2AH2YOAMP7WRz9hzsVCdkwWHdTQ6Q3BIg2HT8ewrFj8BYvO1/VmoYmrTYSXQyVEVw+vU4Nf15Nxj9ppbiKRxOrY+FhVkCuYxuJMiKT22e22At38Dna68q8ki2thrmT3UyaK2XO40rF2fxg2sLbmxuAYzzU4o2D35+QPs0OPSMDF2W8m1pkewTKeMCAN0dINVM5W9Wcf/9Ga9LGvz5FX13EpuJiMZ4M4KnFp0o5fjuEEGbU5dJK272pHn9Em7ZhplYahKsP2Yf0vtBlihXMz4xoGEOizY5mnkCvLmyYMYhY1YpyQnLaZ+OvtTkP/BemZMGdGzujnFa+rh4Y7Xm5zVawMwAbGKv8TlqlYUpvbGeNIzx7mY826DW1HpPWJ3/YjzgfDcMhPlg5LWUSWb8qFZEyvm3xztper7u33iGmkDtLVXlhJig2cLd/NJiJZd0PNcLxE8yvCvdm1NTlqjd1aMdEtZZE+DFFuUhdjJpUS8cq1+M/4c9l5I+MVPm6OTzOzXuc9evNKIJnt4YA72dkayfaekwvwQeKA3ruS6B42FdyYELH6urwH35mWXz1JkDisKW/dVDJaBJwPW5dxlqA6QA4NtXcsA4=
+
+script:
+  - autoreconf -f -i
+  - automake
+  - ./configure
+  - build-wrapper-linux-x86-64 --out-dir bw-output make
+  - sonar-scanner
