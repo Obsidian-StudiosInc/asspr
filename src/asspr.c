@@ -24,7 +24,7 @@
  */
 
 #include "../include/asspr.h"
-#include "../include/version.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,8 +42,8 @@
 # define _(x) (x)
 #endif
 
-const char *argp_program_version = ASSPR_VERSION_STR;
-const char *argp_program_bug_address = ASSPR_CONTACT;
+const char *argp_program_version = PACKAGE_VERSION;
+const char *argp_program_bug_address = PACKAGE_BUGREPORT;
 static char doc[] = "\nCopyright 2006-2018 Obsidian-Studios, Inc.\n"
                     "Distributed under the terms of the GNU General Public License v2 "
                     "This is free software: you are free to change and redistribute it. \n"
