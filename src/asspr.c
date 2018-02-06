@@ -334,8 +334,9 @@ short createReport(char *directory) {
                             if(rpts_ptr[r].sub_ptr[a].address &&
                                (strstr(from,rpts_ptr[r].sub_ptr[a].address) ||
                                 strstr(to,rpts_ptr[r].sub_ptr[a].address))) {
-                                char *buffer = calloc(line_buff_size*4,sizeof(char));
-                                sprintf(buffer,"%s\n%s%s%s\n",dir->d_name,subject,from,to);
+                                int buffer_size = line_buff_size*4;
+                                char *buffer = calloc(buffer_size,sizeof(char));
+                                snprintf(buffer,buffer_size-1,"%s\n%s%s%s\n",dir->d_name,subject,from,to);
                                 int length = rpts_ptr[r].sub_ptr[a].data_length + strlen(buffer);
                                 if(length>=rpts_ptr[r].sub_ptr[a].data_length) {
                                     rpts_ptr[r].sub_ptr[a].data_length += buffer_size+(length-rpts_ptr[r].sub_ptr[a].data_length);
