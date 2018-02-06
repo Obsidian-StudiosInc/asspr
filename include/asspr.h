@@ -2,7 +2,7 @@
  *  asspr.h
  *
  *  Anti-Spam Server Proxy Report
- *  Copyright 2016 Obsidian-Studios, Inc.
+ *  Copyright 2006-2018 Obsidian-Studios, Inc.
  *  Author William L. Thomson Jr.
  *         wlt@obsidian-studios.com
  ****************************************************************************/

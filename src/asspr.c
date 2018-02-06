@@ -2,7 +2,7 @@
  *            asspr.c
  *
  *  Anti-Spam Server Proxy Report
- *  Copyright 2015 Obsidian-Studios, Inc.
+ *  Copyright 2006-2018 Obsidian-Studios, Inc.
  *  Author William L. Thomson Jr.
  *         wlt@obsidian-studios.com
  ****************************************************************************/
@@ -37,7 +37,7 @@
 
 const char *argp_program_version = ASSPR_VERSION_STR;
 const char *argp_program_bug_address = ASSPR_CONTACT;
-static char doc[] = "\nCopyright 2016 Obsidian-Studios, Inc.\n"
+static char doc[] = "\nCopyright 2006-2018 Obsidian-Studios, Inc.\n"
                     "Distributed under the terms of the GNU General Public License v2 "
                     "This is free software: you are free to change and redistribute it. \n"
                     "There is NO WARRANTY, to the extent permitted by law.";
