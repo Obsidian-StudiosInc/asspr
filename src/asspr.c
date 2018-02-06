@@ -35,6 +35,13 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#ifdef ENABLE_NLS
+# include <libintl.h>
+# define _(x) gettext(x)
+#else
+# define _(x) (x)
+#endif
+
 const char *argp_program_version = ASSPR_VERSION_STR;
 const char *argp_program_bug_address = ASSPR_CONTACT;
 static char doc[] = "\nCopyright 2006-2018 Obsidian-Studios, Inc.\n"
@@ -138,7 +145,7 @@ void cleanup() {
  * @param msg a string containing an error message
  */
 void exitError(char *msg) {
-    fprintf(stderr,gettext("Error: %s\n"),msg);
+    fprintf(stderr,_("Error: %s\n"),msg);
     cleanup();
     _exit(EXIT_FAILURE);
 }
@@ -157,7 +164,7 @@ void exitClean() {
  * @param opt a string containing an option not implemented
  */
 void exitNotImp(char *opt) {
-    fprintf(stderr,gettext("Error: %s option has not been implemented.\n "
+    fprintf(stderr,_("Error: %s option has not been implemented.\n "
                            "Please contact support@obsidian-studios.com "
                            "if you are interested in this feature\n"),opt);
     cleanup();
@@ -247,7 +254,7 @@ short inDateRange(struct tm *file_tm_ptr) {
 short createReport(char *directory) {
     DIR *dp;
     if(!(dp = opendir(directory))) {
-        fprintf(stderr,gettext("Could not open %s \n"),directory);
+        fprintf(stderr,_("Could not open %s \n"),directory);
         return(0);
     }
     struct direct *dir;
@@ -262,19 +269,19 @@ short createReport(char *directory) {
         strncat(file_name,dir->d_name,strlen(dir->d_name)+1);
         FILE *fp;
         if(!(fp = fopen(file_name,"r"))) {
-            fprintf(stderr,gettext("Could not open for reading %s\n"),file_name);
+            fprintf(stderr,_("Could not open for reading %s\n"),file_name);
             free(file_name);
             continue;
         }
         if(flock(fileno(fp), LOCK_SH)==-1) {
-            fprintf(stderr,gettext("Could not obtain lock %s\n"),file_name);
+            fprintf(stderr,_("Could not obtain lock %s\n"),file_name);
             fclose(fp);
             free(file_name);
             continue;
         }
         struct stat buf;
         if(fstat(fileno(fp),&buf)==-1) {
-            fprintf(stderr,gettext("Could not stat %s\n"),file_name);
+            fprintf(stderr,_("Could not stat %s\n"),file_name);
             flock(fileno(fp), LOCK_UN);
             fclose(fp);
             free(file_name);
@@ -497,7 +504,7 @@ int main(int argc, char **argv) {
         char *file_name = getConfigDir();
         strncat(file_name,"locals",7);
         if(!(file_ptr = fopen(file_name,"r"))) {
-            fprintf(stderr,gettext("Could not open %s (ASSP's local domains file) for reading\n"),file_name);
+            fprintf(stderr,_("Could not open %s (ASSP's local domains file) for reading\n"),file_name);
             free(file_name);
             cleanup();
             exit(EXIT_FAILURE);
@@ -528,7 +535,7 @@ int main(int argc, char **argv) {
         char *file_name = getConfigDir();
         strncat(file_name,"localaddresses",15);
         if(!(file_ptr = fopen(file_name,"r"))) {
-            fprintf(stderr,gettext("Could not open %s (ASSP's local addresses file) for reading\n"),file_name);
+            fprintf(stderr,_("Could not open %s (ASSP's local addresses file) for reading\n"),file_name);
             free(file_name);
             cleanup();
             exit(EXIT_FAILURE);
@@ -559,7 +566,7 @@ int main(int argc, char **argv) {
         exitError("Domain or email not specified and/or could not be loaded from ASSPs file");
     if(!dirs_length)
         exitError("Folders to report on not specified please use either/or/all -n -s -v options");
-    fprintf(stdout,gettext("Anti-Spam Server Proxy Report %s %s\n"),argp_program_version,asctime(tm_ptr));
+    fprintf(stdout,_("Anti-Spam Server Proxy Report %s %s\n"),argp_program_version,asctime(tm_ptr));
     short d;
     for(d=0;d<dirs_length;d++) {
         char *directory = calloc(strlen(install_dir)+strlen(dirs[d])+1,sizeof(char));
@@ -569,30 +576,30 @@ int main(int argc, char **argv) {
             short r;
             for(r=0;r<rpts;r++) {
                 if(rpts_ptr[r].emails) {
-                    fprintf(stdout,gettext("Domain    : %s\nDirectory : %s\n"),
+                    fprintf(stdout,_("Domain    : %s\nDirectory : %s\n"),
                                    rpts_ptr[r].domain,
                                    directory);
                     if(rpts_ptr[r].sub_count>1)
-                        fprintf(stdout,gettext("Addresses : %d\nEmails : %d\n"),
+                        fprintf(stdout,_("Addresses : %d\nEmails : %d\n"),
                                        rpts_ptr[r].sub_count,
                                        rpts_ptr[r].emails);
                     if(omit_length)
-                        fprintf(stdout,gettext("Omitted   : %d\nTotal     : %d\n"),
+                        fprintf(stdout,_("Omitted   : %d\nTotal     : %d\n"),
                                        rpts_ptr[r].omitted,
                                        rpts_ptr[r].total);
                     short a;
                     for(a=0;a<rpts_ptr[r].sub_count;a++) {
                         if((rpts_ptr[r].sub_ptr[a].emails || include_zero) &&
                            rpts_ptr[r].sub_ptr[a].data) {
-                            fprintf(stdout,gettext("%sAddress   : %s\nEmails    : %d\n"),
+                            fprintf(stdout,_("%sAddress   : %s\nEmails    : %d\n"),
                                            SEPARATOR,
                                            rpts_ptr[r].sub_ptr[a].address,
                                            rpts_ptr[r].sub_ptr[a].emails);
                             if(omit_length)
-                                fprintf(stdout,gettext("Omitted   : %d\nTotal     : %d\n"),
+                                fprintf(stdout,_("Omitted   : %d\nTotal     : %d\n"),
                                                rpts_ptr[r].sub_ptr[a].omitted,
                                                rpts_ptr[r].sub_ptr[a].total);
-                            fprintf(stdout,gettext("%s\n%s%s\n\n"),
+                            fprintf(stdout,_("%s\n%s%s\n\n"),
                                            SEPARATOR,
                                            rpts_ptr[r].sub_ptr[a].data,
                                            SEPARATOR);
