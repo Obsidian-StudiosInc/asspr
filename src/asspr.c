@@ -343,27 +343,32 @@ short createReport(char *directory) {
                                 strstr(to,rpts_ptr[r].sub_ptr[a].address))) {
                                 int buffer_size = line_buff_size*4;
                                 char *buffer = calloc(buffer_size,sizeof(char));
-                                snprintf(buffer,buffer_size-1,"%s\n%s%s%s\n",dir->d_name,subject,from,to);
-                                int length = rpts_ptr[r].sub_ptr[a].data_length + strlen(buffer);
-                                if(length>=rpts_ptr[r].sub_ptr[a].data_length) {
-                                    rpts_ptr[r].sub_ptr[a].data_length += buffer_size+(length-rpts_ptr[r].sub_ptr[a].data_length);
-                                    char *temp = realloc(rpts_ptr[r].sub_ptr[a].data,rpts_ptr[r].sub_ptr[a].data_length);
-                                    if(!temp) {            // this needs to be changed to have better error handling
-                                        free(line);
-                                        free(to);
-                                        free(from);
-                                        free(subject);
-                                        free(buffer);
-                                        exitError("Could not increase buffer large enough to hold report data");
+                                if(buffer) {
+                                    snprintf(buffer,buffer_size-1,"%s\n%s%s%s\n",dir->d_name,subject,from,to);
+                                    int length = rpts_ptr[r].sub_ptr[a].data_length + strlen(buffer);
+                                    if(length>=rpts_ptr[r].sub_ptr[a].data_length) {
+                                        rpts_ptr[r].sub_ptr[a].data_length += buffer_size+(length-rpts_ptr[r].sub_ptr[a].data_length);
+                                        char *temp = realloc(rpts_ptr[r].sub_ptr[a].data,rpts_ptr[r].sub_ptr[a].data_length);
+                                        if(!temp) {            // this needs to be changed to have better error handling
+                                            free(line);
+                                            free(to);
+                                            free(from);
+                                            free(subject);
+                                            free(buffer);
+                                            exitError("Could not increase buffer large enough to hold report data");
+                                        }
+                                        rpts_ptr[r].sub_ptr[a].data = temp;
                                     }
-                                    rpts_ptr[r].sub_ptr[a].data = temp;
+                                    strncat(rpts_ptr[r].sub_ptr[a].data,buffer,strlen(buffer)+1);
+                                    rpts_ptr[r].sub_ptr[a].emails++;
+                                    rpts_ptr[r].sub_ptr[a].total = rpts_ptr[r].sub_ptr[a].emails + rpts_ptr[r].sub_ptr[a].omitted;
+                                    rpts_ptr[r].emails++;
+                                    rpts_ptr[r].total = rpts_ptr[r].emails + rpts_ptr[r].omitted;
+                                    if(buffer) {
+                                       free(buffer);
+                                       buffer = NULL;
+                                    }
                                 }
-                                strncat(rpts_ptr[r].sub_ptr[a].data,buffer,strlen(buffer)+1);
-                                rpts_ptr[r].sub_ptr[a].emails++;
-                                rpts_ptr[r].sub_ptr[a].total = rpts_ptr[r].sub_ptr[a].emails + rpts_ptr[r].sub_ptr[a].omitted;
-                                rpts_ptr[r].emails++;
-                                rpts_ptr[r].total = rpts_ptr[r].emails + rpts_ptr[r].omitted;
-                                free(buffer);
                             }
                         }
                     }
