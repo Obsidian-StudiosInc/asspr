@@ -349,14 +349,8 @@ short createReport(char *directory) {
                                     if(length>=rpts_ptr[r].sub_ptr[a].data_length) {
                                         rpts_ptr[r].sub_ptr[a].data_length += buffer_size+(length-rpts_ptr[r].sub_ptr[a].data_length);
                                         char *temp = realloc(rpts_ptr[r].sub_ptr[a].data,rpts_ptr[r].sub_ptr[a].data_length);
-                                        if(!temp) {            // this needs to be changed to have better error handling
-                                            free(line);
-                                            free(to);
-                                            free(from);
-                                            free(subject);
-                                            free(buffer);
-                                            break;
-                                        }
+                                        if(!temp)
+                                           goto FREE_LINE;
                                         rpts_ptr[r].sub_ptr[a].data = temp;
                                     }
                                     strncat(rpts_ptr[r].sub_ptr[a].data,buffer,strlen(buffer)+1);
@@ -371,6 +365,7 @@ short createReport(char *directory) {
                     }
                 }
             }
+            FREE_LINE:
             free(line);
             free(to);
             free(from);
