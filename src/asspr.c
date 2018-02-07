@@ -355,8 +355,7 @@ short createReport(char *directory) {
                                             free(from);
                                             free(subject);
                                             free(buffer);
-                                            buffer = NULL;
-                                            exitError("Could not increase buffer large enough to hold report data");
+                                            break;
                                         }
                                         rpts_ptr[r].sub_ptr[a].data = temp;
                                     }
@@ -365,10 +364,7 @@ short createReport(char *directory) {
                                     rpts_ptr[r].sub_ptr[a].total = rpts_ptr[r].sub_ptr[a].emails + rpts_ptr[r].sub_ptr[a].omitted;
                                     rpts_ptr[r].emails++;
                                     rpts_ptr[r].total = rpts_ptr[r].emails + rpts_ptr[r].omitted;
-                                    if(buffer) {
-                                       free(buffer);
-                                       buffer = NULL;
-                                    }
+                                    free(buffer);
                                 }
                             }
                         }
