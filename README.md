@@ -3,6 +3,7 @@
 [![Build Status](https://img.shields.io/travis/Obsidian-StudiosInc/asspr/master.svg?colorA=9977bb&style=plastic)](https://travis-ci.org/Obsidian-StudiosInc/asspr)
 [![Build Status](https://img.shields.io/shippable/5840e5c292fdea1000365227/master.svg?colorA=9977bb&style=plastic)](https://app.shippable.com/projects/5840e5c292fdea1000365227/)
 [![Code Quality](https://img.shields.io/coverity/scan/12325.svg?colorA=9977bb&style=plastic)](https://scan.coverity.com/projects/obsidian-studiosinc-asspr)
+[![Code Quality](https://sonarcloud.io/api/project_badges/measure?project=asspr&metric=alert_status)](https://sonarcloud.io/dashboard?id=asspr)
 
 Anti-Spam Server Proxy Report is a small program written in C that 
 creates a report based on the emails in 
