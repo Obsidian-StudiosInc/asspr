@@ -472,9 +472,11 @@ int main(int argc, char **argv) {
     args.days = -1;
     args.years = -1;
 
+    char time_str[line_buff_size];
     time_t time_now;
     time(&time_now);
     tm_ptr = localtime(&time_now);
+    strftime(time_str, line_buff_size, "%a %b %d %T %y", tm_ptr);
     yday = tm_ptr->tm_yday;
     year = tm_ptr->tm_year;
 
@@ -569,7 +571,10 @@ int main(int argc, char **argv) {
         exitError("Domain or email not specified and/or could not be loaded from ASSPs file");
     if(!dirs_length)
         exitError("Folders to report on not specified please use either/or/all -n -s -v options");
-    fprintf(stdout,_("Anti-Spam Server Proxy Report %s %s\n"),argp_program_version,asctime(tm_ptr));
+    fprintf(stdout,
+            _("Anti-Spam Server Proxy Report %s %s\n"),
+            argp_program_version,
+            time_str);
     short d;
     for(d=0;d<dirs_length;d++) {
         char *directory = calloc(strlen(install_dir)+strlen(dirs[d])+1,sizeof(char));
