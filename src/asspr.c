@@ -147,7 +147,7 @@ void cleanup() {
 void exitError(char *msg) {
     fprintf(stderr,_("Error: %s\n"),msg);
     cleanup();
-    _exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
 }
 
 /**
@@ -155,7 +155,7 @@ void exitError(char *msg) {
  */
 void exitClean() {
     cleanup();
-    _exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }
 
 /**
@@ -168,7 +168,7 @@ void exitNotImp(char *opt) {
                            "Please contact support@obsidian-studios.com "
                            "if you are interested in this feature\n"),opt);
     cleanup();
-    _exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
 }
 
 /**
