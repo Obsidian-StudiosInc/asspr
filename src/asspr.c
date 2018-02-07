@@ -349,8 +349,10 @@ short createReport(char *directory) {
                                     if(length>=rpts_ptr[r].sub_ptr[a].data_length) {
                                         rpts_ptr[r].sub_ptr[a].data_length += buffer_size+(length-rpts_ptr[r].sub_ptr[a].data_length);
                                         char *temp = realloc(rpts_ptr[r].sub_ptr[a].data,rpts_ptr[r].sub_ptr[a].data_length);
-                                        if(!temp)
+                                        if(!temp) {
+                                           free(buffer);
                                            goto FREE_LINE;
+                                        }
                                         rpts_ptr[r].sub_ptr[a].data = temp;
                                     }
                                     strncat(rpts_ptr[r].sub_ptr[a].data,buffer,strlen(buffer)+1);
