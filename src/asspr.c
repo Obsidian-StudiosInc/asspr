@@ -355,6 +355,7 @@ short createReport(char *directory) {
                                             free(from);
                                             free(subject);
                                             free(buffer);
+                                            buffer = NULL;
                                             exitError("Could not increase buffer large enough to hold report data");
                                         }
                                         rpts_ptr[r].sub_ptr[a].data = temp;
