@@ -48,10 +48,9 @@ add_executable(asspr src/asspr.c src/main.c)
 IF (${CMAKE_BUILD_TYPE} MATCHES "Debug")
 	find_package(Check REQUIRED)
 	find_package(Threads REQUIRED)
-
 	add_executable(asspr-test EXCLUDE_FROM_ALL tests/asspr-test.c src/asspr.c)
-	target_link_libraries(asspr-test check pthread)
 	add_test(asspr-test ${CMAKE_OUTPUT_DIRECTORY}/asspr-test)
+	target_link_libraries(asspr-test ${CHECK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 ENDIF()
 
 # Install
