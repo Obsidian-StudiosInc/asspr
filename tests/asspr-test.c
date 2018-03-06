@@ -27,9 +27,9 @@
 START_TEST (test_asspr)
 {
     initRptPtr();
-    ck_assert_ptr_nonnull(rpts_ptr);
+    ck_assert(rpts_ptr);
     exitClean();
-    ck_assert_ptr_null(rpts_ptr);
+    ck_assert(!rpts_ptr);
 }
 END_TEST
 
