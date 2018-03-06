@@ -6,10 +6,9 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache/
+build/
 config.cache
 config.guess
-config.h
-config.h.in
 config.log
 config.status
 config.sub
@@ -20,7 +19,6 @@ missing
 nbproject/
 src/asspr
 src/config.h
-src/config.h.in
 src/Makefile
 src/Makefile.in
 stamp-h1
