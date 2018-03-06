@@ -1,0 +1,6 @@
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "https://github.com/Obsidian-StudiosInc/asspr/issues"
+
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
