@@ -207,3 +207,12 @@ void loadOmitFile();
  * @return short, 1 for success, 0 for failure. The short must NOT be freed!
  */
 short omitEmail(char *subject);
+
+/**
+ * Print report
+ *
+ * @param directory the directory of the report
+ * @param d the directory index of directories pointer array
+ * @param r the report index of report struct pointer array
+ */
+void printReport(char *directory, short d, short r);
