@@ -186,6 +186,11 @@ void initRptPtr();
 void initSubPtr(struct sub_report *sub_ptr);
 
 /**
+ * Load omit file contents into variable array
+ */
+void loadOmitFile();
+
+/**
  * Check if an email should be omitted from the report
  *
  * @param subject a string containing an email's subject
