@@ -216,6 +216,43 @@ char ** addDir(char *dir) {
 }
 
 /**
+ * Load local domains file contents into variable array
+ */
+void loadLocalDomains() {
+    if(install_dir && !rpts_ptr) {
+        FILE *file_ptr;
+        char *file_name = getConfigDir();
+        strncat(file_name,"locals",7);
+        if(!(file_ptr = fopen(file_name,"r"))) {
+            fprintf(stderr,_("Could not open %s (ASSP's local domains file) for reading\n"),file_name);
+            free(file_name);
+            cleanup();
+            exit(EXIT_FAILURE);
+        }
+        char *line = calloc(line_buff_size+1,sizeof(char));
+        while(fgets(line,line_buff_size-1,file_ptr)) {
+            struct report *temp = realloc(rpts_ptr,sizeof(struct report)*(rpts+1));
+            if(!temp)
+                exitError("Could not increase buffer large enough to hold all local domains");
+            rpts_ptr = temp;
+            rpts_ptr[rpts].domain = calloc(strlen(line),sizeof(char));
+            strncpy(rpts_ptr[rpts].domain,line,strlen(line)-1);
+            rpts_ptr[rpts].domain_allocated = true;
+            rpts_ptr[rpts].emails = 0;
+            rpts_ptr[rpts].omitted = 0;
+            rpts_ptr[rpts].total = 0;
+            rpts_ptr[rpts].sub_ptr = NULL;
+            rpts_ptr[rpts].sub_count = 0;
+            rpts++;
+            memset(line,'\0',line_buff_size);
+        }
+        free(line);
+        free(file_name);
+        fclose(file_ptr);
+    }
+}
+
+/**
  * Load omit file contents into variable array
  */
 void loadOmitFile() {
@@ -510,37 +547,7 @@ void asspr(int argc, char **argv) {
     if(!install_dir)
         exitError("ASSP installation directory not specified program aborting");
     loadOmitFile();
-    if(install_dir && !rpts_ptr) {
-        FILE *file_ptr;
-        char *file_name = getConfigDir();
-        strncat(file_name,"locals",7);
-        if(!(file_ptr = fopen(file_name,"r"))) {
-            fprintf(stderr,_("Could not open %s (ASSP's local domains file) for reading\n"),file_name);
-            free(file_name);
-            cleanup();
-            exit(EXIT_FAILURE);
-        }
-        char *line = calloc(line_buff_size+1,sizeof(char));
-        while(fgets(line,line_buff_size-1,file_ptr)) {
-            struct report *temp = realloc(rpts_ptr,sizeof(struct report)*(rpts+1));
-            if(!temp)
-                exitError("Could not increase buffer large enough to hold all local domains");
-            rpts_ptr = temp;
-            rpts_ptr[rpts].domain = calloc(strlen(line),sizeof(char));
-            strncpy(rpts_ptr[rpts].domain,line,strlen(line)-1);
-            rpts_ptr[rpts].domain_allocated = true;
-            rpts_ptr[rpts].emails = 0;
-            rpts_ptr[rpts].omitted = 0;
-            rpts_ptr[rpts].total = 0;
-            rpts_ptr[rpts].sub_ptr = NULL;
-            rpts_ptr[rpts].sub_count = 0;
-            rpts++;
-            memset(line,'\0',line_buff_size);
-        }
-        free(line);
-        free(file_name);
-        fclose(file_ptr);
-    }
+    loadLocalDomains();
     if(rpts_ptr[0].sub_count==0) {
         FILE *file_ptr;
         char *file_name = getConfigDir();
