@@ -186,6 +186,11 @@ void initRptPtr();
 void initSubPtr(struct sub_report *sub_ptr);
 
 /**
+ * Load local domains file contents into variable array
+ */
+void loadLocalDomains();
+
+/**
  * Load omit file contents into variable array
  */
 void loadOmitFile();
