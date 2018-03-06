@@ -482,6 +482,59 @@ short createReport(char *directory) {
     return(1);
 }
 
+/**
+ * Print report
+ *
+ * @param d the directory index of directories pointer array
+ * @param r the report index of report struct pointer array
+ */
+void printReport(char *directory, short d, short r) {
+    fprintf(stdout,_("Domain    : %s\nDirectory : %s\n"),
+                   rpts_ptr[r].domain,
+                   directory);
+    if(rpts_ptr[r].sub_count>1)
+        fprintf(stdout,_("Addresses : %d\nEmails : %d\n"),
+                       rpts_ptr[r].sub_count,
+                       rpts_ptr[r].emails);
+    if(omit_length)
+        fprintf(stdout,_("Omitted   : %d\nTotal     : %d\n"),
+                       rpts_ptr[r].omitted,
+                       rpts_ptr[r].total);
+    short a;
+    for(a=0;a<rpts_ptr[r].sub_count;a++) {
+        if((rpts_ptr[r].sub_ptr[a].emails || include_zero) &&
+           rpts_ptr[r].sub_ptr[a].data) {
+            fprintf(stdout,_("%sAddress   : %s\nEmails    : %d\n"),
+                           SEPARATOR,
+                           rpts_ptr[r].sub_ptr[a].address,
+                           rpts_ptr[r].sub_ptr[a].emails);
+            if(omit_length)
+                fprintf(stdout,_("Omitted   : %d\nTotal     : %d\n"),
+                               rpts_ptr[r].sub_ptr[a].omitted,
+                               rpts_ptr[r].sub_ptr[a].total);
+            fprintf(stdout,_("%s\n%s%s\n\n"),
+                           SEPARATOR,
+                           rpts_ptr[r].sub_ptr[a].data,
+                           SEPARATOR);
+            if(d+1>=dirs_length) {
+                freeAddress(&(rpts_ptr[r].sub_ptr[a]));
+                free(rpts_ptr[r].sub_ptr[a].data);
+                rpts_ptr[r].sub_ptr[a].data = NULL;
+                rpts_ptr[r].sub_ptr[a].data_length = 0;
+            } else
+                memset(rpts_ptr[r].sub_ptr[a].data,'\0',rpts_ptr[r].sub_ptr[a].data_length);
+            rpts_ptr[r].sub_ptr[a].emails = 0;
+            rpts_ptr[r].sub_ptr[a].omitted = 0;
+            rpts_ptr[r].sub_ptr[a].total = 0;
+        }
+    }
+    rpts_ptr[r].emails = 0;
+    rpts_ptr[r].omitted = 0;
+    rpts_ptr[r].total = 0;
+    if(d+1>=dirs_length)
+        freeReport(&rpts_ptr[r]);
+}
+
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     struct args *pargs = state->input;
     switch(key) {
@@ -596,58 +649,15 @@ void asspr(int argc, char **argv) {
             argp_program_version,
             time_str);
     short d;
+    short r;
     for(d=0;d<dirs_length;d++) {
         char *directory = calloc(strlen(install_dir)+strlen(dirs[d])+1,sizeof(char));
         strncpy(directory,install_dir,strlen(install_dir)+1);
         strncat(directory,dirs[d],strlen(dirs[d])+1);
         if(createReport(directory)) {
-            short r;
             for(r=0;r<rpts;r++) {
                 if(rpts_ptr[r].emails) {
-                    fprintf(stdout,_("Domain    : %s\nDirectory : %s\n"),
-                                   rpts_ptr[r].domain,
-                                   directory);
-                    if(rpts_ptr[r].sub_count>1)
-                        fprintf(stdout,_("Addresses : %d\nEmails : %d\n"),
-                                       rpts_ptr[r].sub_count,
-                                       rpts_ptr[r].emails);
-                    if(omit_length)
-                        fprintf(stdout,_("Omitted   : %d\nTotal     : %d\n"),
-                                       rpts_ptr[r].omitted,
-                                       rpts_ptr[r].total);
-                    short a;
-                    for(a=0;a<rpts_ptr[r].sub_count;a++) {
-                        if((rpts_ptr[r].sub_ptr[a].emails || include_zero) &&
-                           rpts_ptr[r].sub_ptr[a].data) {
-                            fprintf(stdout,_("%sAddress   : %s\nEmails    : %d\n"),
-                                           SEPARATOR,
-                                           rpts_ptr[r].sub_ptr[a].address,
-                                           rpts_ptr[r].sub_ptr[a].emails);
-                            if(omit_length)
-                                fprintf(stdout,_("Omitted   : %d\nTotal     : %d\n"),
-                                               rpts_ptr[r].sub_ptr[a].omitted,
-                                               rpts_ptr[r].sub_ptr[a].total);
-                            fprintf(stdout,_("%s\n%s%s\n\n"),
-                                           SEPARATOR,
-                                           rpts_ptr[r].sub_ptr[a].data,
-                                           SEPARATOR);
-                            if(d+1>=dirs_length) {
-                                freeAddress(&(rpts_ptr[r].sub_ptr[a]));
-                                free(rpts_ptr[r].sub_ptr[a].data);
-                                rpts_ptr[r].sub_ptr[a].data = NULL;
-                                rpts_ptr[r].sub_ptr[a].data_length = 0;
-                            } else
-                                memset(rpts_ptr[r].sub_ptr[a].data,'\0',rpts_ptr[r].sub_ptr[a].data_length);
-                            rpts_ptr[r].sub_ptr[a].emails = 0;
-                            rpts_ptr[r].sub_ptr[a].omitted = 0;
-                            rpts_ptr[r].sub_ptr[a].total = 0;
-                        }
-                    }
-                    rpts_ptr[r].emails = 0;
-                    rpts_ptr[r].omitted = 0;
-                    rpts_ptr[r].total = 0;
-                    if(d+1>=dirs_length)
-                        freeReport(&rpts_ptr[r]);
+                    printReport(directory,d,r);
                 }
             }
         } else
