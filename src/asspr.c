@@ -227,11 +227,8 @@ void loadOmitFile() {
         while(fgets(line,line_buff_size,omit_file_ptr)) {
             if(strncmp(line,"\n",1)) {
                 char **temp = realloc(omit,sizeof(char*)*(omit_length+1));
-                if(!temp) {
-                    free(line);
-                    fclose(omit_file_ptr);
+                if(!temp)
                     exitError("Could not increase buffer large enough to hold all local omit");
-                }
                 omit = temp;
                 omit[omit_length] = calloc(strlen(line),sizeof(char));
                 strncpy(omit[omit_length],line,strlen(line)-1);
