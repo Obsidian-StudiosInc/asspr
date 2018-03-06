@@ -42,18 +42,17 @@ set(CMAKE_INSTALL_PREFIX "/")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
-# Find packages
-find_package(Check REQUIRED)
-
 # Compile
 add_executable(asspr src/asspr.c src/main.c)
-add_executable(asspr-test EXCLUDE_FROM_ALL tests/asspr-test.c src/asspr.c)
 
-# Link
-target_link_libraries(asspr-test check)
+IF (${CMAKE_BUILD_TYPE} MATCHES "Debug")
+	find_package(Check REQUIRED)
+	find_package(Threads REQUIRED)
 
-# Test
-add_test(asspr-test ${CMAKE_OUTPUT_DIRECTORY}/asspr-test)
+	add_executable(asspr-test EXCLUDE_FROM_ALL tests/asspr-test.c src/asspr.c)
+	target_link_libraries(asspr-test check pthread)
+	add_test(asspr-test ${CMAKE_OUTPUT_DIRECTORY}/asspr-test)
+ENDIF()
 
 # Install
 install(TARGETS asspr RUNTIME DESTINATION usr/bin)
