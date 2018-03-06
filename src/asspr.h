@@ -93,11 +93,24 @@ struct sub_report {
 };
 
 /**
+ * Variable to hold the main report pointer
+ */
+extern struct report *rpts_ptr;
+
+/**
  * Add a directory to the report
  *
  * @param dir a string containing a directory to add to the report
  */
 char ** addDir(char *dir);
+
+/**
+ * Cleanup before exit, free allocated memory
+ *
+ * @param argc argument count from main
+ * @param argv argument value array from main
+ */
+void asspr(int argc, char **argv);
 
 /**
  * Cleanup before exit, free allocated memory
