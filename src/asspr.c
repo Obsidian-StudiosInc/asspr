@@ -216,6 +216,44 @@ char ** addDir(char *dir) {
 }
 
 /**
+ * Load local addresses file contents into variable array
+ */
+void loadLocalAdressses() {
+    if(rpts_ptr[0].sub_count==0) {
+        FILE *file_ptr;
+        char *file_name = getConfigDir();
+        strncat(file_name,"localaddresses",15);
+        if(!(file_ptr = fopen(file_name,"r"))) {
+            fprintf(stderr,_("Could not open %s (ASSP's local addresses file) for reading\n"),file_name);
+            free(file_name);
+            cleanup();
+            exit(EXIT_FAILURE);
+        }
+        char *line = calloc(line_buff_size+1,sizeof(char));
+        while(fgets(line,line_buff_size-1,file_ptr)) {
+            short r;
+            for(r=0;r<rpts;r++) {
+                if(strstr(line,rpts_ptr[r].domain)) {
+                    struct sub_report *temp = realloc(rpts_ptr[r].sub_ptr,sizeof(struct sub_report)*(rpts_ptr[r].sub_count+1));
+                    if(!temp)
+                        exitError("Could not increase buffer large enough to hold all local addresses");
+                    rpts_ptr[r].sub_ptr = temp;
+                    initSubPtr(&(rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count]));
+                    rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address = calloc(strlen(line),sizeof(char));
+                    strncpy(rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address,line,strlen(line)-1);
+                    rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address_allocated = true;
+                    rpts_ptr[r].sub_count++;
+                    memset(line,'\0',line_buff_size);
+                }
+            }
+        }
+        free(line);
+        free(file_name);
+        fclose(file_ptr);
+    }
+}
+
+/**
  * Load local domains file contents into variable array
  */
 void loadLocalDomains() {
@@ -548,38 +586,7 @@ void asspr(int argc, char **argv) {
         exitError("ASSP installation directory not specified program aborting");
     loadOmitFile();
     loadLocalDomains();
-    if(rpts_ptr[0].sub_count==0) {
-        FILE *file_ptr;
-        char *file_name = getConfigDir();
-        strncat(file_name,"localaddresses",15);
-        if(!(file_ptr = fopen(file_name,"r"))) {
-            fprintf(stderr,_("Could not open %s (ASSP's local addresses file) for reading\n"),file_name);
-            free(file_name);
-            cleanup();
-            exit(EXIT_FAILURE);
-        }
-        char *line = calloc(line_buff_size+1,sizeof(char));
-        while(fgets(line,line_buff_size-1,file_ptr)) {
-            short r;
-            for(r=0;r<rpts;r++) {
-                if(strstr(line,rpts_ptr[r].domain)) {
-                    struct sub_report *temp = realloc(rpts_ptr[r].sub_ptr,sizeof(struct sub_report)*(rpts_ptr[r].sub_count+1));
-                    if(!temp)
-                        exitError("Could not increase buffer large enough to hold all local addresses");
-                    rpts_ptr[r].sub_ptr = temp;
-                    initSubPtr(&(rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count]));
-                    rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address = calloc(strlen(line),sizeof(char));
-                    strncpy(rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address,line,strlen(line)-1);
-                    rpts_ptr[r].sub_ptr[rpts_ptr[r].sub_count].address_allocated = true;
-                    rpts_ptr[r].sub_count++;
-                    memset(line,'\0',line_buff_size);
-                }
-            }
-        }
-        free(line);
-        free(file_name);
-        fclose(file_ptr);
-    }
+    loadLocalAdressses();
     if(!rpts_ptr)
         exitError("Domain or email not specified and/or could not be loaded from ASSPs file");
     if(!dirs_length)
