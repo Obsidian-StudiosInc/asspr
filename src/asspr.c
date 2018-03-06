@@ -216,6 +216,35 @@ char ** addDir(char *dir) {
 }
 
 /**
+ * Load omit file contents into variable array
+ */
+void loadOmitFile() {
+    if(omit_file) {
+        FILE *omit_file_ptr;
+        if(!(omit_file_ptr = fopen(omit_file,"r")))
+            exitError("Could open for omit file for reading\n");
+        char *line = calloc(line_buff_size+1,sizeof(char));
+        while(fgets(line,line_buff_size,omit_file_ptr)) {
+            if(strncmp(line,"\n",1)) {
+                char **temp = realloc(omit,sizeof(char*)*(omit_length+1));
+                if(!temp) {
+                    free(line);
+                    fclose(omit_file_ptr);
+                    exitError("Could not increase buffer large enough to hold all local omit");
+                }
+                omit = temp;
+                omit[omit_length] = calloc(strlen(line),sizeof(char));
+                strncpy(omit[omit_length],line,strlen(line)-1);
+                omit_length++;
+            }
+            memset(line,'\0',line_buff_size);
+        }
+        free(line);
+        fclose(omit_file_ptr);
+    }
+}
+
+/**
  * Check if an email should be omitted from the report
  *
  * @param subject a string containing an email's subject
@@ -483,26 +512,7 @@ void asspr(int argc, char **argv) {
 
     if(!install_dir)
         exitError("ASSP installation directory not specified program aborting");
-    if(omit_file) {
-        FILE *omit_file_ptr;
-        if(!(omit_file_ptr = fopen(omit_file,"r")))
-            exitError("Could open for omit file for reading\n");
-        char *line = calloc(line_buff_size+1,sizeof(char));
-        while(fgets(line,line_buff_size,omit_file_ptr)) {
-            if(strncmp(line,"\n",1)) {
-                char **temp = realloc(omit,sizeof(char*)*(omit_length+1));
-                if(!temp)
-                    exitError("Could not increase buffer large enough to hold all local omit");
-                omit = temp;
-                omit[omit_length] = calloc(strlen(line),sizeof(char));
-                strncpy(omit[omit_length],line,strlen(line)-1);
-                omit_length++;
-            }
-            memset(line,'\0',line_buff_size);
-        }
-        free(line);
-        fclose(omit_file_ptr);
-    }
+    loadOmitFile();
     if(install_dir && !rpts_ptr) {
         FILE *file_ptr;
         char *file_name = getConfigDir();
