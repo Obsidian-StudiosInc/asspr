@@ -465,7 +465,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 
 static struct argp argp = { options, parse_opt, args_doc, doc };
 
-int main(int argc, char **argv) {
+void asspr(int argc, char **argv) {
     struct args args;
     args.c = 0;
     args.days = -1;
@@ -633,6 +633,4 @@ int main(int argc, char **argv) {
             exitError("Report could not be created");
         free(directory);
     }
-    atexit(cleanup);
-    exit(EXIT_SUCCESS);
 }
