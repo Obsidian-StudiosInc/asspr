@@ -16,10 +16,11 @@ check_rc() {
 }
 
 init_files() {
-	local email emails ext exts
+	local dir email emails ext exts i z
 
 	emails=( abuse admin mailer-daemon postmaster root webmaster )
 	exts=( com net org )
+	i=0
 	if [[ ! -d "${ASSP}" ]] && [[ ! -d "${CONFIG}" ]]; then
 		mkdir -p "${ASSP}"/{discarded,notspam,spam} "${CONFIG}"
 
@@ -28,8 +29,21 @@ init_files() {
 			for email in "${emails[@]}"; do
 				echo "${email}@domain.${ext}" \
 					>> "${CONFIG}/localaddresses.txt"
+				for dir in discarded notspam spam; do
+					# shellcheck disable=SC2034
+					for z in 1 2; do
+						(( i+=1 ))
+						echo \
+"From: <${dir}mer@${dir}.com>
+Date: $(date)
+To: ${email}@domain.${ext}
+Subject: ${dir^} email subject
+" > "${ASSP}${dir}/${i}.eml"
+					done
+				done
 			done
 		done
+
 	fi
 }
 
