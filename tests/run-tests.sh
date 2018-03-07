@@ -22,7 +22,7 @@ init_files() {
 	exts=( com net org )
 	i=0
 	if [[ ! -d "${ASSP}" ]] && [[ ! -d "${CONFIG}" ]]; then
-		mkdir -p "${ASSP}"/{discarded,notspam,spam} "${CONFIG}"
+		mkdir -p "${ASSP}"/{discarded,notspam,spam,viruses} "${CONFIG}"
 
 		for ext in "${exts[@]}"; do
 			echo "domain.${ext}" >> "${CONFIG}/localdomains.txt"
@@ -61,7 +61,7 @@ test_bin() {
 	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -d "domain.com"
 	check_rc $?
 
-	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s
+	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -n -v
 	check_rc $?
 }
 
