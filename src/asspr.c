@@ -56,7 +56,7 @@ char *config_dir = NULL;
 char *omit_file = NULL;
 char **dirs = NULL;
 char **omit = NULL;
-unsigned short dir_buffer_length = 15;
+unsigned short dir_buffer_length = 20;
 unsigned short dirs_length = 0;
 unsigned short omit_length = 0;
 unsigned short rpts = 0;
@@ -222,7 +222,7 @@ void loadLocalAdressses() {
     if(rpts_ptr[0].sub_count==0) {
         FILE *file_ptr;
         char *file_name = getConfigDir();
-        strncat(file_name,"localaddresses",15);
+        strncat(file_name,"localaddresses.txt",19);
         if(!(file_ptr = fopen(file_name,"r"))) {
             fprintf(stderr,_("Could not open %s (ASSP's local addresses file) for reading\n"),file_name);
             free(file_name);
@@ -260,7 +260,7 @@ void loadLocalDomains() {
     if(install_dir && !rpts_ptr) {
         FILE *file_ptr;
         char *file_name = getConfigDir();
-        strncat(file_name,"locals",7);
+        strncat(file_name,"localdomains.txt",17);
         if(!(file_ptr = fopen(file_name,"r"))) {
             fprintf(stderr,_("Could not open %s (ASSP's local domains file) for reading\n"),file_name);
             free(file_name);
