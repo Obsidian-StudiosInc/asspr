@@ -26,6 +26,7 @@ script:
   - cmake -D CMAKE_BUILD_TYPE=Debug ./
   - ${SONAR} make asspr asspr-test
   - make test
+  - ./tests/run-tests.sh -b
   - if [ "${SONAR}" ]; then find . -name '*.gcno' -exec sh -c 'gcov -b {} -o $(dirname {})' \;; fi
   - if [ "${SONAR}" ]; then sonar-scanner; else make; fi
 
