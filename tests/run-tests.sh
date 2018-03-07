@@ -55,7 +55,14 @@ test_code() {
 test_bin() {
 	init_files
 
+	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -e "admin@domain.com"
+	check_rc $?
+
+	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -d "domain.com"
+	check_rc $?
+
 	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s
+	check_rc $?
 }
 
 case "$1" in
