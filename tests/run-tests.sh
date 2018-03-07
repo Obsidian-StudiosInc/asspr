@@ -29,7 +29,7 @@ init_files() {
 			for email in "${emails[@]}"; do
 				echo "${email}@domain.${ext}" \
 					>> "${CONFIG}/localaddresses.txt"
-				for dir in discarded notspam spam; do
+				for dir in discarded notspam spam viruses; do
 					# shellcheck disable=SC2034
 					for z in 1 2; do
 						(( i+=1 ))
@@ -69,7 +69,7 @@ test_bin() {
         ARGS=( E H M S "?" V )
 	# skip check_rc all exit with error code by design
         for arg in "${ARGS[@]}"; do
-                ${VG} "${BIN}" -"${arg}"
+                ${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -"${arg}"
         done
 }
 
