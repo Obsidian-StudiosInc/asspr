@@ -151,14 +151,6 @@ void exitError(char *msg) {
 }
 
 /**
- * Exit clean/normally
- */
-void exitClean() {
-    cleanup();
-    exit(EXIT_SUCCESS);
-}
-
-/**
  * Exit with an error code and not implemented message
  *  
  * @param opt a string containing an option not implemented

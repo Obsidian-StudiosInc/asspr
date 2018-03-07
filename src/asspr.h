@@ -126,11 +126,6 @@ void cleanup();
 short createReport(char *directory);
 
 /**
- * Exit clean/normally
- */
-void exitClean();
-
-/**
  * Exit with an error code and message
  *  
  * @param msg a string containing an error message
