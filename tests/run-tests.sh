@@ -53,6 +53,8 @@ test_code() {
 }
 
 test_bin() {
+	local arg ARGS
+
 	init_files
 
 	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -e "admin@domain.com"
@@ -63,6 +65,12 @@ test_bin() {
 
 	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -n -v
 	check_rc $?
+
+        ARGS=( E H M S "?" V )
+	# skip check_rc all exit with error code by design
+        for arg in "${ARGS[@]}"; do
+                ${VG} "${BIN}" -"${arg}"
+        done
 }
 
 case "$1" in
