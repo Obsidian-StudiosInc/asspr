@@ -28,8 +28,8 @@ START_TEST (test_asspr)
 {
     initRptPtr();
     ck_assert(rpts_ptr);
-    exitClean();
-    ck_assert(!rpts_ptr);
+    free(rpts_ptr);
+    ck_assert(rpts_ptr);
 }
 END_TEST
 
