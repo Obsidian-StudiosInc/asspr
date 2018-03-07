@@ -6,6 +6,8 @@ dist: trusty
 install:
   - sudo apt-get -qq update
   - sudo apt-get install -y check cmake libc6-dbg rpm
+  - wget https://launchpad.net/ubuntu/+source/valgrind/1:3.13.0-1ubuntu3/+build/13618072/+files/valgrind_3.13.0-1ubuntu3_amd64.deb
+  - sudo dpkg -i *.deb
 
 jobs:
   include:
