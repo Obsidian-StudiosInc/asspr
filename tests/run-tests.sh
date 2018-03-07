@@ -10,6 +10,7 @@ BIN="${BIN_TEST%%-*}"
 
 ASSP="build/var/lib/assp/"
 CONFIG="build/etc/assp/"
+OMIT="build/etc/assp/asspr_omit.txt"
 
 check_rc() {
 	[[ ${1} -ne 0 ]] && exit "${1}"
@@ -24,20 +25,21 @@ init_files() {
 	if [[ ! -d "${ASSP}" ]] && [[ ! -d "${CONFIG}" ]]; then
 		mkdir -p "${ASSP}"/{discarded,notspam,spam,viruses} "${CONFIG}"
 
+		echo -e "cheap\ndiscount\n" > "${OMIT}"
+
 		for ext in "${exts[@]}"; do
 			echo "domain.${ext}" >> "${CONFIG}/localdomains.txt"
 			for email in "${emails[@]}"; do
 				echo "${email}@domain.${ext}" \
 					>> "${CONFIG}/localaddresses.txt"
 				for dir in discarded notspam spam viruses; do
-					# shellcheck disable=SC2034
-					for z in 1 2; do
+					for z in 1 2 cheap discount; do
 						(( i+=1 ))
 						echo \
 "From: <${dir}mer@${dir}.com>
 Date: $(date)
 To: ${email}@domain.${ext}
-Subject: ${dir^} email subject
+Subject: ${dir^} email subject ${z}
 " > "${ASSP}${dir}/${i}.eml"
 					done
 				done
@@ -63,7 +65,7 @@ test_bin() {
 	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -d "domain.com"
 	check_rc $?
 
-	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -n -v
+	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -n -v -o "${OMIT}"
 	check_rc $?
 
         ARGS=( E H M S "?" V )
