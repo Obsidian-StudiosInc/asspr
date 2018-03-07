@@ -69,7 +69,7 @@ test_bin() {
         ARGS=( E H M S "?" V )
 	# skip check_rc all exit with error code by design
         for arg in "${ARGS[@]}"; do
-                ${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -"${arg}"
+                ${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -"${arg}" value
         done
 }
 
