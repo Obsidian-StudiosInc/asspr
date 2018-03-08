@@ -348,8 +348,11 @@ short createReport(char *directory) {
         fprintf(stderr,_("Could not open %s \n"),directory);
         return(0);
     }
-    struct direct *dir;
-    while((dir = readdir(dp))) {
+    struct direct prev;
+    struct direct *dir = NULL;
+    for(;;) {
+        readdir_r(dp, &prev, &dir);
+        if(!dir) break;
         if(dir->d_ino == 0)
             continue;
         if(!strncasecmp(dir->d_name,".",1) ||
