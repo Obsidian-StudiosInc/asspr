@@ -378,8 +378,9 @@ short createReport(char *directory) {
             free(file_name);
             continue;
         }
+        struct tm local_tm;
         time_t file_time = buf.st_mtime;
-        struct tm *file_tm_ptr = localtime(&file_time);
+        struct tm *file_tm_ptr = localtime_r(&file_time, &local_tm);
         if(inDateRange(file_tm_ptr)) {
             int results = 0;
             char *line = calloc(line_buff_size,sizeof(char));
@@ -624,9 +625,10 @@ void asspr(int argc, char **argv) {
     args.years = -1;
 
     char time_str[line_buff_size];
+    struct tm local_tm;
     time_t time_now;
     time(&time_now);
-    tm_ptr = localtime(&time_now);
+    tm_ptr = localtime_r(&time_now, &local_tm);
     strftime(time_str, line_buff_size, "%a %b %d %T %y", tm_ptr);
     yday = tm_ptr->tm_yday;
     year = tm_ptr->tm_year;
