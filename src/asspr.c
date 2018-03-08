@@ -585,14 +585,18 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
             break;
         case 'E' :
             errorNotImp("end date");
+            return(0);
         case 'H' :
             hour = tm_ptr->tm_hour;
             errorNotImp("hours");
+            return(0);
         case 'M' :
             minute = tm_ptr->tm_min;
             errorNotImp("minutes");
+            return(0);
         case 'S' :
             errorNotImp("start date");
+            return(0);
         case 'Y' :
             pargs->years = atoi(arg);
             if(pargs->years>1)
