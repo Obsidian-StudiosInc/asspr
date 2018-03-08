@@ -137,7 +137,7 @@ void exitError(char *msg);
  *  
  * @param opt a string containing an option not implemented
  */
-void exitNotImp(char *opt);
+void errorNotImp(char *opt);
 
 /**
  * Frees the allocated memory used by an array of report structs

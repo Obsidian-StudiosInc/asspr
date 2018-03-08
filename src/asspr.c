@@ -155,12 +155,10 @@ void exitError(char *msg) {
  *  
  * @param opt a string containing an option not implemented
  */
-void exitNotImp(char *opt) {
+void errorNotImp(char *opt) {
     fprintf(stderr,_("Error: %s option has not been implemented.\n "
                            "Please contact support@obsidian-studios.com "
                            "if you are interested in this feature\n"),opt);
-    cleanup();
-    exit(EXIT_FAILURE);
 }
 
 /**
@@ -586,15 +584,15 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                 yday = 0;
             break;
         case 'E' :
-            exitNotImp("end date");
+            errorNotImp("end date");
         case 'H' :
             hour = tm_ptr->tm_hour;
-            exitNotImp("hours");
+            errorNotImp("hours");
         case 'M' :
             minute = tm_ptr->tm_min;
-            exitNotImp("minutes");
+            errorNotImp("minutes");
         case 'S' :
-            exitNotImp("start date");
+            errorNotImp("start date");
         case 'Y' :
             pargs->years = atoi(arg);
             if(pargs->years>1)
