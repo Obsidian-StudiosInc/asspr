@@ -604,6 +604,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
             else if(!pargs->years)
                 yday = 0;
             break;
+        case ARGP_KEY_NO_ARGS:
+            if(!state->argv[1])
+                argp_usage(state);
+            return(1);
         default:
             return ARGP_ERR_UNKNOWN;
 
