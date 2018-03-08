@@ -62,7 +62,7 @@ test_bin() {
 	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -e "admin@domain.com"
 	check_rc $?
 
-	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -d "domain.com"
+	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -d "domain.com" -z
 	check_rc $?
 
 	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -n -v -o "${OMIT}"
