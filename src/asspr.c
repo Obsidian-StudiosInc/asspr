@@ -387,7 +387,7 @@ short createReport(char *directory) {
             char *to = calloc(line_buff_size,sizeof(char));
             char *from = calloc(line_buff_size,sizeof(char));
             char *subject = calloc(line_buff_size,sizeof(char));
-            while(fgets(line,line_buff_size-1,fp)) {
+            while(results<3 && fgets(line,line_buff_size-1,fp)) {
                 if(!strncasecmp(line,"From",4)) {
                     strncpy(from,line,strlen(line)+1);
                     results++;
@@ -419,8 +419,6 @@ short createReport(char *directory) {
                     }
                 }
                 memset(line,'\0',line_buff_size);
-                if(results==3)
-                    break;
             }
             if(results==3) {
                 int r;
