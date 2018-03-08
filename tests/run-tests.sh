@@ -68,11 +68,19 @@ test_bin() {
 	${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -c -s -n -v -o "${OMIT}"
 	check_rc $?
 
-        ARGS=( E H M S "?" V )
+        ARGS=( E H M S )
 	# skip check_rc all exit with error code by design
         for arg in "${ARGS[@]}"; do
                 ${VG} "${BIN}" -a "${ASSP}" -C "${CONFIG}" -"${arg}" value
         done
+
+        ARGS=( "?" V )
+	# skip check_rc all exit with error code by design
+        for arg in "${ARGS[@]}"; do
+                ${VG} "${BIN}" -"${arg}"
+        done
+
+	${VG} "${BIN}"
 }
 
 case "$1" in
