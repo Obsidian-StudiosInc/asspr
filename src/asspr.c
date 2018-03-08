@@ -629,7 +629,7 @@ void asspr(int argc, char **argv) {
     time_t time_now;
     time(&time_now);
     tm_ptr = localtime_r(&time_now, &local_tm);
-    strftime(time_str, line_buff_size, "%a %b %d %T %y", tm_ptr);
+    strftime(time_str, line_buff_size, "%a %b %d %T %Y", tm_ptr);
     yday = tm_ptr->tm_yday;
     year = tm_ptr->tm_year;
 
