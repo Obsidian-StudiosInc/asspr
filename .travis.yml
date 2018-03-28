@@ -2,6 +2,9 @@ language: c
 compiler: gcc
 sudo: required
 dist: trusty
+env:
+  global:
+    - MY_PV=0.2.9
 
 install:
   - sudo apt-get -qq update
@@ -23,6 +26,24 @@ jobs:
           organization: obsidian-studiosinc-github
           token:
             secure: K3LkbiZNaUuJTYMi4ysVFk9ZtUxiCNLa8eRQVSF2KxrtN+u8SQPY0S5b8Xu0l7O6LKLKTdAwSKCM5r2AH2YOAMP7WRz9hzsVCdkwWHdTQ6Q3BIg2HT8ewrFj8BYvO1/VmoYmrTYSXQyVEVw+vU4Nf15Nxj9ppbiKRxOrY+FhVkCuYxuJMiKT22e22At38Dna68q8ki2thrmT3UyaK2XO40rF2fxg2sLbmxuAYzzU4o2D35+QPs0OPSMDF2W8m1pkewTKeMCAN0dINVM5W9Wcf/9Ga9LGvz5FX13EpuJiMZ4M4KnFp0o5fjuEEGbU5dJK272pHn9Em7ZhplYahKsP2Yf0vtBlihXMz4xoGEOizY5mnkCvLmyYMYhY1YpyQnLaZ+OvtTkP/BemZMGdGzujnFa+rh4Y7Xm5zVawMwAbGKv8TlqlYUpvbGeNIzx7mY826DW1HpPWJ3/YjzgfDcMhPlg5LWUSWb8qFZEyvm3xztper7u33iGmkDtLVXlhJig2cLd/NJiJZd0PNcLxE8yvCvdm1NTlqjd1aMdEtZZE+DFFuUhdjJpUS8cq1+M/4c9l5I+MVPm6OTzOzXuc9evNKIJnt4YA72dkayfaekwvwQeKA3ruS6B42FdyYELH6urwH35mWXz1JkDisKW/dVDJaBJwPW5dxlqA6QA4NtXcsA4=
+    - stage: Deploy
+      if: tag =~ ^v.*
+      deploy:
+        provider: releases
+        api_key:
+          secure: o1QCPfk+VoC+a0lLE5c9BfucJeUXRFq5acaofFk/07RR5lBRVhDiSE6l9a2ZP92iFBqTeoQQCCf83eTWTK1r/1tbP9k/goFkXeZjqRE+DuPJ1d7qAcYize23IL+VLy1T+z/jwfUYBt/kxj9GxRQ8dTqxhIDiuA4N7WFRqeMnkpxcPcbrqDJXstWL6rZIk3KCiGCM4P5TT9b2x9T8FuRTqnXDZHkiDq0MrRxX5A98Y0tJwBHbauxnzrnfxtcDbaX9cqdSrOqcpe1ndEYIFiWPGzdgmFqBFeiTOcng0vcjKo616rk4CoCbfjU4CI2FMFuDFO70InknY6eQknzaPo9qpuhRve3UTZw2YD58TfUs/4b+9aVep5sehWeZpUvNzjqGko1r4XnhzU90hylZAK5xEY3CFvEhnC/B/j+e06aLvuafI5YkC56fT3uwUCPeJ+cAtt4835XcJkKEIafZpESAp3256kwzyM+aQv3oOGq6K1YHmi4OtjmQ1bA/UB4E27IAQf5VIybxIlW0WL/78UKsQ5DfpQUBomXDgLRPbXxDkrGE9kvMu+sA15dxjEDL4z46sjlc8ENol9sbA6bbFDohKeDB96Z1f/9mFyBl2ACQgG0DQjaP0AtUHa0r8L1cfiX0mX5sc3wGG8w3mMNjPV2drhW5SwyPrrPTOlJko7EunXM=
+        file:
+          - dist/asspr-${MY_PV}.x86_64.deb
+          - dist/asspr-${MY_PV}.x86_64.rpm
+        on:
+          repo: Obsidian-StudiosInc/asspr
+          branch: master
+          tags: true
+        skip_cleanup: true
+      script:
+        - cmake -D CMAKE_BUILD_TYPE=Release ./
+        - make package
+
 
 script:
   - cmake -D CMAKE_BUILD_TYPE=Debug ./
