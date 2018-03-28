@@ -18,7 +18,7 @@ enable_testing()
 project (asspr C)
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 2)
-set(VERSION_PATCH 9)
+set(VERSION_PATCH 10)
 set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 configure_file ("${PROJECT_SOURCE_DIR}/src/config.h.in"
